@@ -1,0 +1,17 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: campusconnect-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: campusconnect
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: campus
+      MYSQL_PASSWORD: campus
+    ports:
+      - "3306:3306"
+    volumes:
+      - campusconnect_mysql:/var/lib/mysql
+
+volumes:
+  campusconnect_mysql:
