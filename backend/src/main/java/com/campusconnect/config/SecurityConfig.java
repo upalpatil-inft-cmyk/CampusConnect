@@ -16,7 +16,13 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final JwtAuthFilter jwtFilter;
-    public SecurityConfig(JwtAuthFilter jwtFilter){this.jwtFilter=jwtFilter;}
+    private final List<String> allowedOriginPatterns;
+
+    public SecurityConfig(JwtAuthFilter jwtFilter,
+                          @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origin-patterns:http://localhost:5173,https://*.vercel.app}") List<String> allowedOriginPatterns){
+        this.jwtFilter=jwtFilter;
+        this.allowedOriginPatterns=allowedOriginPatterns;
+    }
 
     @Bean PasswordEncoder passwordEncoder(){return new BCryptPasswordEncoder();}
 
@@ -33,7 +39,7 @@ public class SecurityConfig {
 
     @Bean CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration c=new CorsConfiguration();
-        c.setAllowedOrigins(List.of("http://localhost:5173"));
+        c.setAllowedOriginPatterns(allowedOriginPatterns);
         c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         c.setAllowedHeaders(List.of("*"));
         c.setAllowCredentials(true);
