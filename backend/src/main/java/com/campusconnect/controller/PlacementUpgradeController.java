@@ -35,9 +35,12 @@ public class PlacementUpgradeController {
         return drives.findAll().stream().map(d -> {
             var app = appByDrive.get(d.getId());
             boolean cgpaEligible = student.getCgpa() >= d.getMinimumCgpa();
+            String departmentCode = student.getDepartment().getCode();
+            String departmentName = student.getDepartment().getName();
             boolean branchEligible = d.getEligibleBranches() == null || d.getEligibleBranches().isBlank()
                     || Arrays.stream(d.getEligibleBranches().split(","))
-                        .map(String::trim).anyMatch(x -> x.equalsIgnoreCase(student.getDepartment().getName()));
+                        .map(String::trim)
+                        .anyMatch(x -> x.equalsIgnoreCase(departmentCode) || x.equalsIgnoreCase(departmentName));
             return Map.of(
                 "id", d.getId(),
                 "company", d.getCompany().getName(),
@@ -89,6 +92,7 @@ public class PlacementUpgradeController {
     public Object updateStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         var app = applications.findById(id).orElseThrow();
         var raw = body.get("status");
+        if (raw == null || raw.isBlank()) throw new IllegalArgumentException("Status is required");
         var status = ApplicationStatus.valueOf(raw.toUpperCase(Locale.ROOT));
         app.setStatus(status);
         var saved = applications.save(app);
