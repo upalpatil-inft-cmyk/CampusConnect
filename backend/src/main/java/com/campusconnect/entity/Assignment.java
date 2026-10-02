@@ -9,8 +9,8 @@ public class Assignment {
     private Long id;
     @Column(nullable=false) private String title;
     @Column(nullable=false, length=3000) private String description;
-    @ManyToOne(optional=false) private Subject subject;
-    @ManyToOne(optional=false) private Faculty faculty;
+    @ManyToOne(optional=false) @JoinColumn(name="subject_id", foreignKey=@ForeignKey(name="fk_assignment_subject")) private Subject subject;
+    @ManyToOne(optional=false) @JoinColumn(name="faculty_id", foreignKey=@ForeignKey(name="fk_assignment_faculty")) private Faculty faculty;
     @Column(nullable=false) private LocalDate deadline;
 
     public Assignment() {}
