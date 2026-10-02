@@ -73,7 +73,7 @@ function Assignments(){
    try{
      const form=new FormData(); form.append('assignmentId',id); form.append('file',file);
      await api.post('/assignments/submit-file',form,{headers:{'Content-Type':'multipart/form-data'}});
-     setFile(null); document.getElementById('assignment-file')?.setAttribute('value',''); await load();
+     setFile(null); await load();
    }catch(e){alert(e.response?.data?.message||'Unable to submit assignment')}finally{setBusy(false)}
  }
  function due(deadline){if(deadline<today)return 'Overdue'; const days=Math.ceil((new Date(deadline)-new Date(today))/86400000); return days===0?'Due today':`Due in ${days}d`}
@@ -83,7 +83,7 @@ function Assignments(){
     const s=submitted.get(a.id); const status=s?'SUBMITTED':(a.deadline<today?'OVERDUE':'PENDING');
     return <article className="assignment-item" key={a.id}>
       <div><span className="label">{a.subject?.code||'ASSIGNMENT'}</span><h3>{a.title}</h3><p>{a.description}</p><small>Deadline · {a.deadline||'Not set'} · <b>{due(a.deadline)}</b></small>{s&&<div className="submission-note"><CheckCircle2 size={14}/> {s.fileName} · {s.marks==='—'?'Awaiting grade':`Marks: ${s.marks}`}{s.feedback!=='—'&&` · ${s.feedback}`}</div>}</div>
-      <div className="assignment-action">{s?<span className="status-ok"><CheckCircle2 size={15}/> Submitted</span>:<><input id={`assignment-file-${a.id}`} type="file" onChange={e=>setFile(e.target.files?.[0]||null)}/><button className="primary" disabled={busy||status==='OVERDUE'} onClick={()=>submit(a.id)}>{busy?'Uploading…':'Submit file'}</button></>}</div>
+      <div className="assignment-action">{s?<span className="status-ok"><CheckCircle2 size={15}/> Submitted</span>:<><input key={file ? file.name : `empty-${a.id}`} id={`assignment-file-${a.id}`} type="file" onChange={e=>setFile(e.target.files?.[0]||null)}/><button className="primary" disabled={busy||status==='OVERDUE'} onClick={()=>submit(a.id)}>{busy?'Uploading…':'Submit file'}</button></>}</div>
     </article>
   })}{!visible.length&&<div className="panel empty">No assignments match this filter.</div>}</div>
   <Panel title="Submission history" meta="Grades and faculty feedback appear here."><DataTable cols={['assignment','fileName','submittedAt','marks','feedback']} rows={submissions}/></Panel>
