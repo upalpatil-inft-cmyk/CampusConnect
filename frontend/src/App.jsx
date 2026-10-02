@@ -1,7 +1,7 @@
 import React from 'react'
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
-import { Bell, BriefcaseBusiness, CalendarDays, CheckCircle2, ClipboardCheck, FileText, GraduationCap, LayoutDashboard, LogOut, UserRound, Users, Building2, ArrowUpRight, BookOpen, CircleAlert } from 'lucide-react';
+import { Bell, BriefcaseBusiness, CalendarDays, Clock3, MapPin, CheckCircle2, ClipboardCheck, FileText, GraduationCap, LayoutDashboard, LogOut, UserRound, Users, Building2, ArrowUpRight, BookOpen, CircleAlert } from 'lucide-react';
 import { api, login } from './api';
 
 const role = () => localStorage.getItem('campusconnect_role');
@@ -24,7 +24,7 @@ function Login() {
 
 function Shell({children}){
   const nav=useNavigate(); const r=role(); const name=localStorage.getItem('campusconnect_name')||'User';
-  const student=[['/','Overview',LayoutDashboard],['/profile','Profile',UserRound],['/attendance','Attendance',ClipboardCheck],['/marks','Marks',GraduationCap],['/assignments','Assignments',FileText],['/placements','Placements',BriefcaseBusiness]];
+  const student=[['/','Overview',LayoutDashboard],['/profile','Profile',UserRound],['/timetable','Timetable',CalendarDays],['/attendance','Attendance',ClipboardCheck],['/marks','Marks',GraduationCap],['/assignments','Assignments',FileText],['/placements','Placements',BriefcaseBusiness]];
   const faculty=[['/','Overview',LayoutDashboard],['/faculty/attendance','Attendance',ClipboardCheck],['/faculty/marks','Marks',GraduationCap],['/faculty/assignments','Assignments',FileText]];
   const admin=[['/','Overview',LayoutDashboard],['/admin/companies','Companies',Building2],['/admin/drives','Placement Drives',BriefcaseBusiness],['/admin/applications','Applications',Users]];
   const links=r==='STUDENT'?student:r==='FACULTY'?faculty:admin;
@@ -82,6 +82,29 @@ function AdminCompanies(){const[form,setForm]=useState({name:'',website:'',descr
 function AdminDrives(){const[form,setForm]=useState({companyId:1,jobRole:'',packageLpa:'',minimumCgpa:'',deadline:'',eligibleBranches:'CS,IT'});const[busy,setBusy]=useState(false);async function save(e){e.preventDefault();setBusy(true);try{await api.post('/admin/drives',form);alert('Placement drive created.');setForm({...form,jobRole:'',packageLpa:'',minimumCgpa:'',deadline:''})}catch(e){alert(e.response?.data?.message||'Unable to create drive')}finally{setBusy(false)}}return <Page title="Placement drives" subtitle="Create opportunities students can discover and apply to."><Panel title="New placement drive"><form className="form-grid" onSubmit={save}><label>Company ID<input required type="number" value={form.companyId} onChange={e=>setForm({...form,companyId:e.target.value})}/></label><label>Job role<input required value={form.jobRole} onChange={e=>setForm({...form,jobRole:e.target.value})}/></label><label>Package (LPA)<input required type="number" step="0.1" value={form.packageLpa} onChange={e=>setForm({...form,packageLpa:e.target.value})}/></label><label>Minimum CGPA<input required type="number" step="0.1" value={form.minimumCgpa} onChange={e=>setForm({...form,minimumCgpa:e.target.value})}/></label><label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label><label>Eligible branches<input value={form.eligibleBranches} onChange={e=>setForm({...form,eligibleBranches:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Creating…':'Create drive'}</button></form></Panel></Page>}
 function AdminApplications(){const[rows,setRows]=useState([]);useEffect(()=>{api.get('/admin/applications').then(r=>setRows(r.data))},[]);return <Page title="Applications" subtitle="Review student placement applications."><DataTable cols={['id','status','appliedAt']} rows={rows}/></Page>}
 
+function Timetable(){
+ const[rows,setRows]=useState([]),[day,setDay]=useState('ALL');
+ useEffect(()=>{api.get('/student/timetable').then(r=>setRows(r.data)).catch(()=>setRows([]))},[]);
+ const days=['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+ const visible=day==='ALL'?rows:rows.filter(x=>x.day===day);
+ return <Page title="My timetable" subtitle="Your weekly class schedule, synced from the campus portal." action={<div className="semester">Semester 5 <i>•</i> Weekly view</div>}>
+   <div className="day-tabs"><button className={day==='ALL'?'active':''} onClick={()=>setDay('ALL')}>All</button>{days.map(d=><button key={d} className={day===d?'active':''} onClick={()=>setDay(d)}>{d.slice(0,3)}</button>)}</div>
+   <div className="timetable-grid">{visible.map(x=><article className="class-card" key={x.id}>
+      <div className="class-time"><Clock3 size={15}/><b>{x.startTime.slice(0,5)} – {x.endTime.slice(0,5)}</b><span>{x.day}</span></div>
+      <div className="class-main"><span className="label">{x.code}</span><h3>{x.subject}</h3><p>{x.faculty}</p></div>
+      <div className="class-room"><MapPin size={14}/>{x.room}</div>
+   </article>)}{!visible.length&&<div className="panel empty">No classes scheduled for this view.</div>}</div>
+ </Page>
+}
+
+function Subjects(){
+ const[rows,setRows]=useState([]);
+ useEffect(()=>{api.get('/student/subjects').then(r=>setRows(r.data)).catch(()=>setRows([]))},[]);
+ return <Page title="My subjects" subtitle="Academic snapshot for your current semester.">
+   <div className="subject-cards">{rows.map(s=><article className="subject-card" key={s.id}><span className="label">{s.code}</span><h3>{s.name}</h3><div className="subject-meta"><span>Credits <b>{s.credits}</b></span><span>Attendance <b>{s.attendance}%</b></span><span>Marks <b>{s.internalMarks}/{s.totalMarks||'—'}</b></span></div></article>)}{!rows.length&&<div className="panel empty">No subjects available.</div>}</div>
+ </Page>
+}
+
 function DataTable({cols,rows}){if(!rows?.length)return <div className="panel empty">No records yet.</div>;return <div className="table-wrap"><table><thead><tr>{cols.map(c=><th key={c}>{c.replace(/([A-Z])/g,' $1')}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={r.id||i}>{cols.map(c=><td key={c}>{typeof r[c]==='object'?JSON.stringify(r[c]):String(r[c]??'—')}</td>)}</tr>)}</tbody></table></div>}
 
 export default function App(){
@@ -92,7 +115,7 @@ export default function App(){
 
     {r === 'STUDENT' && <>
       <Route path="/" element={protectedPage(<StudentDashboard/>)}/>
-      <Route path="/profile" element={protectedPage(<Profile/>)}/>
+      <Route path="/profile" element={protectedPage(<Profile/>)}/><Route path="/timetable" element={protectedPage(<Timetable/>)}/><Route path="/subjects" element={protectedPage(<Subjects/>)}/>
       <Route path="/attendance" element={protectedPage(<Attendance/>)}/>
       <Route path="/marks" element={protectedPage(<Marks/>)}/>
       <Route path="/assignments" element={protectedPage(<Assignments/>)}/>
