@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 public class Submission {
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(optional=false) private Assignment assignment;
-    @ManyToOne(optional=false) private Student student;
+    @ManyToOne(optional=false) @JoinColumn(name="assignment_id", foreignKey=@ForeignKey(name="fk_submission_assignment")) private Assignment assignment;
+    @ManyToOne(optional=false) @JoinColumn(name="student_id", foreignKey=@ForeignKey(name="fk_submission_student")) private Student student;
     @Column(nullable=false) private String fileName;
     @Column(nullable=false) private LocalDateTime submittedAt = LocalDateTime.now();
     private Double marks;
