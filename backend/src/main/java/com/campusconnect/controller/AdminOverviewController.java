@@ -58,7 +58,6 @@ public class AdminOverviewController {
                     result.put("email", u.getEmail());
                     result.put("role", u.getRole());
                     result.put("active", u.isActive());
-                    result.put("createdAt", u.getCreatedAt());
                     return result;
                 }).toList();
     }
