@@ -25,3 +25,15 @@
 .assignment-action input[type="file"]{max-width:220px;padding:10px;border:1px solid rgba(20,55,45,.14);border-radius:12px;background:#fff;font-size:12px}
 .submission-note{display:flex;align-items:center;gap:7px;margin-top:12px;padding:9px 11px;border-radius:10px;background:#f5f7f2;font-size:12px;color:#315044}
 .assignment-action{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+.placement-stats{margin-bottom:18px}
+.placement-filters{margin-bottom:18px}
+.placement-card{display:flex;flex-direction:column;gap:8px}
+.placement-company h3{margin:5px 0 0}
+.eligibility-box{display:flex;flex-direction:column;gap:5px;margin:8px 0;padding:11px 12px;border-radius:13px;background:#f5f7f2;font-size:12px}
+.eligibility-box b{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#315044}
+.eligibility-box .ok{color:#28634b}
+.eligibility-box .bad{color:#a0523c}
+.placement-bottom{margin-top:18px}
+.status-select{border:1px solid rgba(20,55,45,.14);border-radius:10px;padding:8px 10px;background:#fff;color:#173b30;font-weight:700;font-size:12px}
+@media(max-width:800px){.placement-bottom{grid-template-columns:1fr}}
