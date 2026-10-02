@@ -21,5 +21,6 @@ public class AdminController {
         var c=companies.findById(r.companyId()).orElseThrow();
         return drives.save(new PlacementDrive(c,r.jobRole(),r.packageLpa(),r.minimumCgpa(),r.deadline(),r.eligibleBranches()));
     }
+    @GetMapping("/drives") public Object drives(){return drives.findAll();}
     @GetMapping("/applications") public Object applications(){return applications.findAll();}
 }
