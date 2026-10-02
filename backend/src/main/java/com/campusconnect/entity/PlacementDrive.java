@@ -7,7 +7,7 @@ import java.time.LocalDate;
 public class PlacementDrive {
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(optional=false) private Company company;
+    @ManyToOne(optional=false) @JoinColumn(name="company_id", foreignKey=@ForeignKey(name="fk_placement_company")) private Company company;
     @Column(nullable=false) private String jobRole;
     @Column(nullable=false) private double packageLpa;
     @Column(nullable=false) private double minimumCgpa;
