@@ -1,7 +1,7 @@
 import React from 'react'
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
-import { Bell, BriefcaseBusiness, CalendarDays, Clock3, MapPin, CheckCircle2, ClipboardCheck, FileText, GraduationCap, LayoutDashboard, LogOut, UserRound, Users, Building2, ArrowUpRight, BookOpen, CircleAlert } from 'lucide-react';
+import { Bell, BriefcaseBusiness, CalendarDays, Clock3, MapPin, CheckCircle2, ClipboardCheck, FileText, GraduationCap, LayoutDashboard, LogOut, UserRound, Users, Building2, UserCheck, ArrowUpRight, BookOpen, CircleAlert } from 'lucide-react';
 import { api, login } from './api';
 
 const role = () => localStorage.getItem('campusconnect_role');
@@ -26,7 +26,7 @@ function Shell({children}){
   const nav=useNavigate(); const r=role(); const name=localStorage.getItem('campusconnect_name')||'User';
   const student=[['/','Overview',LayoutDashboard],['/profile','Profile',UserRound],['/timetable','Timetable',CalendarDays],['/subjects','Subjects',BookOpen],['/attendance','Attendance',ClipboardCheck],['/marks','Marks',GraduationCap],['/assignments','Assignments',FileText],['/placements','Placements',BriefcaseBusiness]];
   const faculty=[['/','Overview',LayoutDashboard],['/faculty/attendance','Attendance',ClipboardCheck],['/faculty/marks','Marks',GraduationCap],['/faculty/assignments','Assignments',FileText],['/faculty/submissions','Review',CheckCircle2]];
-  const admin=[['/','Overview',LayoutDashboard],['/admin/companies','Companies',Building2],['/admin/drives','Placement Drives',BriefcaseBusiness],['/admin/applications','Applications',Users]];
+  const admin=[['/','Overview',LayoutDashboard],['/admin/users','Users',UserCheck],['/admin/companies','Companies',Building2],['/admin/drives','Placement Drives',BriefcaseBusiness],['/admin/applications','Applications',Users]];
   const links=r==='STUDENT'?student:r==='FACULTY'?faculty:admin;
   function logout(){localStorage.clear();nav('/login')}
   return <div className="app-shell"><header className="topbar"><div className="brand"><span className="brand-mark">C</span><span><strong>CampusConnect</strong><small>College portal</small></span></div><nav className="topnav">{links.map(([to,label,Icon])=><NavLink key={to} to={to} end={to==='/' }><Icon size={15}/>{label}</NavLink>)}</nav><div className="top-actions"><button className="icon-btn" title="Notifications"><Bell size={17}/></button><div className="user-chip"><div className="avatar">{name[0]}</div><div><b>{name}</b><small>{r}</small></div></div><button className="logout-btn" onClick={logout}><LogOut size={15}/></button></div></header><main className="content">{children}</main></div>
@@ -185,9 +185,55 @@ function FacultyAssignments(){
 }
 
 function FacultySubmissions(){const[rows,setRows]=useState([]);const[busy,setBusy]=useState(null);async function load(){const r=await api.get('/faculty/submissions');setRows(r.data)}useEffect(()=>{load()},[]);async function grade(id){const marks=prompt('Marks (0-100):');if(marks===null)return;const feedback=prompt('Feedback:')||'';setBusy(id);try{await api.patch(`/faculty/submissions/${id}/grade`,{marks,feedback});await load()}catch(e){alert(e.response?.data?.message||'Unable to grade submission')}finally{setBusy(null)}}return <Page title="Review submissions" subtitle="Grade student work and leave concise feedback."><div className="assignment-list">{rows.map(s=><article className="assignment-item" key={s.id}><div><span className="label">{s.assignment}</span><h3>{s.student}</h3><p>{s.fileName}</p><small>Submitted · {s.submittedAt}</small></div><div className="assignment-action"><span className="status-ok">{s.marks==='—'?'Not graded':`Marks: ${s.marks}`}</span><button className="primary" disabled={busy===s.id} onClick={()=>grade(s.id)}>{busy===s.id?'Saving…':'Grade'}</button></div></article>)}{!rows.length&&<div className="panel empty">No submissions yet.</div>}</div></Page>}
-function AdminDashboard(){return <Page eyebrow="ADMIN DASHBOARD" title="System overview" subtitle="A restrained control surface for campus operations."><div className="stat-grid"><Stat label="STUDENTS" value="1" note="Registered"/><Stat label="FACULTY" value="1" note="Active accounts"/><Stat label="OPEN DRIVES" value="1" note="Current term"/><Stat label="APPLICATIONS" value="0" note="Placement activity"/></div><Panel title="System status"><div className="status-ok"><CheckCircle2 size={16}/> API connected</div></Panel></Page>}
-function AdminCompanies(){const[form,setForm]=useState({name:'',website:'',description:''});const[busy,setBusy]=useState(false);async function save(e){e.preventDefault();setBusy(true);try{await api.post('/admin/companies',form);alert('Company created.');setForm({name:'',website:'',description:''})}catch(e){alert(e.response?.data?.message||'Unable to create company')}finally{setBusy(false)}}return <Page title="Companies" subtitle="Add organizations for placement drives."><Panel title="New company"><form onSubmit={save}>{['name','website','description'].map(k=><label key={k}>{k}<input required={k==='name'} value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})}/></label>)}<button className="primary" disabled={busy}>{busy?'Saving…':'Add company'}</button></form></Panel></Page>}
-function AdminDrives(){const[form,setForm]=useState({companyId:1,jobRole:'',packageLpa:'',minimumCgpa:'',deadline:'',eligibleBranches:'CS,IT'});const[busy,setBusy]=useState(false);async function save(e){e.preventDefault();setBusy(true);try{await api.post('/admin/drives',form);alert('Placement drive created.');setForm({...form,jobRole:'',packageLpa:'',minimumCgpa:'',deadline:''})}catch(e){alert(e.response?.data?.message||'Unable to create drive')}finally{setBusy(false)}}return <Page title="Placement drives" subtitle="Create opportunities students can discover and apply to."><Panel title="New placement drive"><form className="form-grid" onSubmit={save}><label>Company ID<input required type="number" value={form.companyId} onChange={e=>setForm({...form,companyId:e.target.value})}/></label><label>Job role<input required value={form.jobRole} onChange={e=>setForm({...form,jobRole:e.target.value})}/></label><label>Package (LPA)<input required type="number" step="0.1" value={form.packageLpa} onChange={e=>setForm({...form,packageLpa:e.target.value})}/></label><label>Minimum CGPA<input required type="number" step="0.1" value={form.minimumCgpa} onChange={e=>setForm({...form,minimumCgpa:e.target.value})}/></label><label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label><label>Eligible branches<input value={form.eligibleBranches} onChange={e=>setForm({...form,eligibleBranches:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Creating…':'Create drive'}</button></form></Panel></Page>}
+function AdminDashboard(){
+ const[stats,setStats]=useState(null);
+ useEffect(()=>{api.get('/admin/overview').then(r=>setStats(r.data)).catch(()=>setStats(null))},[]);
+ return <Page eyebrow="ADMIN DASHBOARD" title="System overview" subtitle="A live snapshot of users, academics and placement operations.">
+  <div className="stat-grid">
+   <Stat label="STUDENTS" value={stats?.students??'—'} note="Registered students" icon={Users}/>
+   <Stat label="FACULTY" value={stats?.faculty??'—'} note="Faculty accounts" accent="orange" icon={GraduationCap}/>
+   <Stat label="COMPANIES" value={stats?.companies??'—'} note="Placement partners" accent="cream" icon={Building2}/>
+   <Stat label="APPLICATIONS" value={stats?.applications??'—'} note={stats?(stats.selected+' selected'):'Placement activity'} icon={BriefcaseBusiness}/>
+  </div>
+  <div className="cards admin-cards">
+   <article className="op-card"><span className="label">USER DIRECTORY</span><h3>{stats?.activeUsers??'—'} active accounts</h3><p>Review student, faculty and admin access.</p><NavLink className="primary" to="/admin/users">Manage users <ArrowUpRight size={14}/></NavLink></article>
+   <article className="op-card"><span className="label">PLACEMENT</span><h3>{stats?.drives??'—'} placement drives</h3><p>Companies and opportunities are managed centrally.</p><NavLink className="primary" to="/admin/drives">Manage drives <ArrowUpRight size={14}/></NavLink></article>
+   <article className="op-card"><span className="label">SYSTEM</span><h3>{stats?.users??'—'} total users</h3><p>Core API and database services are connected.</p><div className="status-ok"><CheckCircle2 size={15}/> Operational</div></article>
+  </div>
+ </Page>
+}
+function AdminCompanies(){
+ const[form,setForm]=useState({name:'',website:'',description:''}),[rows,setRows]=useState([]),[busy,setBusy]=useState(false);
+ async function load(){const r=await api.get('/admin/companies');setRows(r.data)}
+ useEffect(()=>{load()},[]);
+ async function save(e){e.preventDefault();setBusy(true);try{await api.post('/admin/companies',form);setForm({name:'',website:'',description:''});await load()}catch(e){alert(e.response?.data?.message||'Unable to create company')}finally{setBusy(false)}}
+ return <Page title="Companies" subtitle="Manage organizations available for placement drives.">
+  <div className="profile-grid"><Panel title="New company"><form onSubmit={save}><label>Company name<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label><label>Website<input value={form.website} onChange={e=>setForm({...form,website:e.target.value})}/></label><label>Description><textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Saving…':'Add company'}</button></form></Panel><Panel title="Company directory" meta="Registered placement partners"><DataTable cols={['name','website','description']} rows={rows}/></Panel></div>
+ </Page>
+}
+function AdminDrives(){
+ const[form,setForm]=useState({companyId:'',jobRole:'',packageLpa:'',minimumCgpa:'',deadline:'',eligibleBranches:'CS,IT'}),[companies,setCompanies]=useState([]),[rows,setRows]=useState([]),[busy,setBusy]=useState(false);
+ async function load(){const[a,b]=await Promise.all([api.get('/admin/companies'),api.get('/admin/drives')]);setCompanies(a.data);setRows(b.data)}
+ useEffect(()=>{load()},[]);
+ async function save(e){e.preventDefault();setBusy(true);try{await api.post('/admin/drives',form);setForm({...form,jobRole:'',packageLpa:'',minimumCgpa:'',deadline:''});await load()}catch(e){alert(e.response?.data?.message||'Unable to create drive')}finally{setBusy(false)}}
+ return <Page title="Placement drives" subtitle="Create opportunities and review the current placement pipeline.">
+  <Panel title="New placement drive"><form className="form-grid" onSubmit={save}><label>Company<select required value={form.companyId} onChange={e=>setForm({...form,companyId:e.target.value})}><option value="">Select company</option>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Job role<input required value={form.jobRole} onChange={e=>setForm({...form,jobRole:e.target.value})}/></label><label>Package (LPA)<input required type="number" step="0.1" value={form.packageLpa} onChange={e=>setForm({...form,packageLpa:e.target.value})}/></label><label>Minimum CGPA<input required type="number" step="0.1" value={form.minimumCgpa} onChange={e=>setForm({...form,minimumCgpa:e.target.value})}/></label><label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label><label>Eligible branches<input value={form.eligibleBranches} onChange={e=>setForm({...form,eligibleBranches:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Creating…':'Create drive'}</button></form></Panel>
+  <Panel title="Drive directory" meta="Published placement opportunities"><DataTable cols={['company','jobRole','packageLpa','minimumCgpa','deadline','eligibleBranches']} rows={rows.map(d=>({...d,company:d.company?.name||'—'}))}/></Panel>
+ </Page>
+}
+function AdminUsers(){
+ const[rows,setRows]=useState([]),[busy,setBusy]=useState(null);
+ async function load(){const r=await api.get('/admin/users');setRows(r.data)}
+ useEffect(()=>{load()},[]);
+ async function toggle(id,active){setBusy(id);try{await api.patch('/admin/users/'+id+'/active',{active:!active});await load()}catch(e){alert(e.response?.data?.message||'Unable to update user')}finally{setBusy(null)}}
+ return <Page title="User management" subtitle="Review account roles and control access to the portal.">
+  <Panel title="User directory" meta="Account status and role overview">
+   <div className="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Access</th></tr></thead><tbody>{rows.map(u=><tr key={u.id}><td><b>{u.name}</b></td><td>{u.email}</td><td><span className="label">{u.role}</span></td><td><span className={u.active?'status-ok':'status-bad'}>{u.active?'Active':'Inactive'}</span></td><td><button className={u.active?'secondary-btn':'primary'} disabled={busy===u.id} onClick={()=>toggle(u.id,u.active)}>{busy===u.id?'Updating…':u.active?'Deactivate':'Activate'}</button></td></tr>)}</tbody></table></div>
+   {!rows.length&&<div className="empty">No users found.</div>}
+  </Panel>
+ </Page>
+}
+
 function AdminApplications(){
  const[rows,setRows]=useState([]),[busy,setBusy]=useState(null);
  async function load(){const r=await api.get('/admin/applications');setRows(r.data)}
@@ -255,7 +301,7 @@ export default function App(){
 
     {r === 'ADMIN' && <>
       <Route path="/" element={protectedPage(<AdminDashboard/>)}/>
-      <Route path="/admin/companies" element={protectedPage(<AdminCompanies/>)}/>
+      <Route path="/admin/users" element={protectedPage(<AdminUsers/>)}/><Route path="/admin/companies" element={protectedPage(<AdminCompanies/>)}/>
       <Route path="/admin/drives" element={protectedPage(<AdminDrives/>)}/>
       <Route path="/admin/applications" element={protectedPage(<AdminApplications/>)}/>
     </>}
