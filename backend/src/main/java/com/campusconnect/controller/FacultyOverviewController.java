@@ -45,7 +45,7 @@ public class FacultyOverviewController {
                 .filter(s -> s.getDepartment().getId().equals(dept.getId())).toList();
         var assignmentList = assignments.findAll().stream()
                 .filter(x -> x.getFaculty().getId().equals(f.getId())).toList();
-        var assignmentIds = assignmentList.stream().map(x -> x.getId()).toSet();
+        var assignmentIds = assignmentList.stream().map(x -> x.getId()).collect(java.util.stream.Collectors.toSet());
         var pending = submissions.findAll().stream()
                 .filter(x -> assignmentIds.contains(x.getAssignment().getId()) && x.getMarks() == null).count();
 
