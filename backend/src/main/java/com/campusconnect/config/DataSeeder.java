@@ -21,7 +21,7 @@ public class DataSeeder {
             var cs=departments.save(new Department("Computer Science","CS"));
             var admin=users.save(new User("admin@campusconnect.local",encoder.encode("Admin@123"),Role.ADMIN,"Campus Admin"));
             var fuser=users.save(new User("faculty@campusconnect.local",encoder.encode("Faculty@123"),Role.FACULTY,"Priya Sharma"));
-            var suser=users.save(new User("student@campusconnect.local",encoder.encode("Student@123"),Role.STUDENT,"Upal Patil"));
+            var suser=users.save(new User("student@campusconnect.local",encoder.encode("CampusConnect!7Qv#29Lm"),Role.STUDENT,"Upal Patil"));
 
             var f=faculty.save(new Faculty(fuser,cs,"FAC001"));
             var s=students.save(new Student(suser,cs,"127",5,8.4));
