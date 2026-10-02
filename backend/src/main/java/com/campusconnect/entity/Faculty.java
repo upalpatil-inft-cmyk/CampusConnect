@@ -6,8 +6,8 @@ import jakarta.persistence.*;
 public class Faculty {
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
-    @OneToOne(optional=false) private User user;
-    @ManyToOne(optional=false) private Department department;
+    @OneToOne(optional=false) @JoinColumn(name="user_id", foreignKey=@ForeignKey(name="fk_faculty_user")) private User user;
+    @ManyToOne(optional=false) @JoinColumn(name="department_id", foreignKey=@ForeignKey(name="fk_faculty_department")) private Department department;
     private String employeeId;
 
     public Faculty() {}
