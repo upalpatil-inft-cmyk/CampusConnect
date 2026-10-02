@@ -48,7 +48,7 @@ public class SubjectController {
                             "code",s.getCode(),
                             "credits",5,
                             "attendance",attendancePct,
-                            "internalMarks",subjectMarks.map(x -> x.getInternalMarks()).orElse(0),
+                            "internalMarks",subjectMarks.map(x -> x.getInternalMarks()).orElse(0.0),
                             "totalMarks",subjectMarks.map(x -> x.getTotalMarks()).orElse(0)
                     );
                 }).toList();
