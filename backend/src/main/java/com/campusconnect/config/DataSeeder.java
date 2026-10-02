@@ -37,7 +37,10 @@ public class DataSeeder {
 
             assignments.save(new Assignment("Spring Boot REST API","Build a small REST API using Spring Boot.",java,f,LocalDate.now().plusDays(7)));
 
-            var company=companies.save(new Company("TCS","https://www.tcs.com","Technology and consulting company."));
+            var company=companies.findAll().stream()
+                    .filter(c -> "TCS".equalsIgnoreCase(c.getName()))
+                    .findFirst()
+                    .orElseGet(() -> companies.save(new Company("TCS","https://www.tcs.com","Technology and consulting company.")));
             drives.save(new PlacementDrive(company,"Graduate Engineer",7.5,7.0,LocalDate.now().plusDays(20),"CS,IT"));
 
             notices.save(new Notice("Welcome to CampusConnect","Tier 1 portal is now available for students and faculty.",admin));
