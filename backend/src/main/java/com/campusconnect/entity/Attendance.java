@@ -8,8 +8,8 @@ import java.time.LocalDate;
 public class Attendance {
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(optional=false) private Student student;
-    @ManyToOne(optional=false) private Subject subject;
+    @ManyToOne(optional=false) @JoinColumn(name="student_id", foreignKey=@ForeignKey(name="fk_attendance_student")) private Student student;
+    @ManyToOne(optional=false) @JoinColumn(name="subject_id", foreignKey=@ForeignKey(name="fk_attendance_subject")) private Subject subject;
     @Column(nullable=false) private LocalDate date;
     @Column(nullable=false) private boolean present;
 
