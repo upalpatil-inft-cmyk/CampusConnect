@@ -41,22 +41,23 @@ public class PlacementUpgradeController {
                     || Arrays.stream(d.getEligibleBranches().split(","))
                         .map(String::trim)
                         .anyMatch(x -> x.equalsIgnoreCase(departmentCode) || x.equalsIgnoreCase(departmentName));
-            return Map.of(
-                "id", d.getId(),
-                "company", d.getCompany().getName(),
-                "website", d.getCompany().getWebsite() == null ? "" : d.getCompany().getWebsite(),
-                "description", d.getCompany().getDescription() == null ? "" : d.getCompany().getDescription(),
-                "jobRole", d.getJobRole(),
-                "packageLpa", d.getPackageLpa(),
-                "minimumCgpa", d.getMinimumCgpa(),
-                "deadline", d.getDeadline(),
-                "eligibleBranches", d.getEligibleBranches() == null ? "" : d.getEligibleBranches(),
-                "cgpaEligible", cgpaEligible,
-                "branchEligible", branchEligible,
-                "eligible", cgpaEligible && branchEligible,
-                "applicationStatus", app == null ? "" : app.getStatus().name(),
-                "appliedAt", app == null ? "" : app.getAppliedAt()
-            );
+
+            var result = new LinkedHashMap<String, Object>();
+            result.put("id", d.getId());
+            result.put("company", d.getCompany().getName());
+            result.put("website", d.getCompany().getWebsite() == null ? "" : d.getCompany().getWebsite());
+            result.put("description", d.getCompany().getDescription() == null ? "" : d.getCompany().getDescription());
+            result.put("jobRole", d.getJobRole());
+            result.put("packageLpa", d.getPackageLpa());
+            result.put("minimumCgpa", d.getMinimumCgpa());
+            result.put("deadline", d.getDeadline());
+            result.put("eligibleBranches", d.getEligibleBranches() == null ? "" : d.getEligibleBranches());
+            result.put("cgpaEligible", cgpaEligible);
+            result.put("branchEligible", branchEligible);
+            result.put("eligible", cgpaEligible && branchEligible);
+            result.put("applicationStatus", app == null ? "" : app.getStatus().name());
+            result.put("appliedAt", app == null ? "" : app.getAppliedAt());
+            return result;
         }).toList();
     }
 
