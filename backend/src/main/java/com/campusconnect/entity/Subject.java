@@ -8,7 +8,7 @@ public class Subject {
     private Long id;
     @Column(nullable=false) private String name;
     @Column(nullable=false, unique=true) private String code;
-    @ManyToOne(optional=false) private Department department;
+    @ManyToOne(optional=false) @JoinColumn(name="department_id", foreignKey=@ForeignKey(name="fk_subject_department")) private Department department;
     private int semester;
 
     public Subject() {}
