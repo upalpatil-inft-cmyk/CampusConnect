@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 public class Application {
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne(optional=false) private PlacementDrive placementDrive;
-    @ManyToOne(optional=false) private Student student;
+    @ManyToOne(optional=false) @JoinColumn(name="placement_drive_id", foreignKey=@ForeignKey(name="fk_application_drive")) private PlacementDrive placementDrive;
+    @ManyToOne(optional=false) @JoinColumn(name="student_id", foreignKey=@ForeignKey(name="fk_application_student")) private Student student;
     @Enumerated(EnumType.STRING) @Column(nullable=false)
     private ApplicationStatus status = ApplicationStatus.APPLIED;
     @Column(nullable=false) private LocalDateTime appliedAt = LocalDateTime.now();
