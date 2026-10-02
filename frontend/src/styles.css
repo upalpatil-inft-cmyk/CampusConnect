@@ -19,3 +19,9 @@
 .subject-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.subject-card{padding:24px;border:1px solid rgba(255,255,255,.8);border-radius:22px;background:rgba(255,255,255,.74);box-shadow:0 14px 35px rgba(38,44,39,.06)}.subject-card h3{font:600 24px "Space Grotesk";letter-spacing:-.04em;margin:5px 0 20px}.subject-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.subject-meta span{padding:12px;border-radius:12px;background:#f2eee7;color:var(--muted);font-size:10px}.subject-meta b{display:block;color:var(--ink);font-size:13px;margin-top:3px}
 @media(max-width:800px){.timetable-grid,.subject-cards{grid-template-columns:1fr}.class-card{grid-template-columns:95px 1fr}.class-room{grid-column:2;justify-self:start}}
 @media(max-width:520px){.class-card{grid-template-columns:1fr}.class-time{max-width:180px}.class-room{grid-column:auto}.subject-meta{grid-template-columns:1fr 1fr}}
+
+
+.assignment-filters{margin-bottom:18px;display:flex;gap:8px;flex-wrap:wrap}
+.assignment-action input[type="file"]{max-width:220px;padding:10px;border:1px solid rgba(20,55,45,.14);border-radius:12px;background:#fff;font-size:12px}
+.submission-note{display:flex;align-items:center;gap:7px;margin-top:12px;padding:9px 11px;border-radius:10px;background:#f5f7f2;font-size:12px;color:#315044}
+.assignment-action{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
