@@ -89,7 +89,40 @@ function Assignments(){
   <Panel title="Submission history" meta="Grades and faculty feedback appear here."><DataTable cols={['assignment','fileName','submittedAt','marks','feedback']} rows={submissions}/></Panel>
  </Page>
 }
-function Placements(){const[rows,setRows]=useState([]),[apps,setApps]=useState([]);async function load(){const[a,b]=await Promise.all([api.get('/placements/drives'),api.get('/student/applications')]);setRows(a.data);setApps(b.data)}useEffect(()=>{load()},[]);async function apply(id){try{await api.post(`/placements/drives/${id}/apply`);load()}catch(e){alert(e.response?.data?.message||'Unable to apply')}}return <Page title="Placements" subtitle="Discover eligible opportunities and track your applications."><div className="cards">{rows.map(d=><article className="op-card" key={d.id}><span className="label">OPEN DRIVE</span><h3>{d.company?.name}</h3><p>{d.jobRole}</p><strong>₹{d.packageLpa} LPA</strong><small>Minimum CGPA {d.minimumCgpa}</small><button className="primary" onClick={()=>apply(d.id)}>Apply <ArrowUpRight size={14}/></button></article>)}</div><Panel title="My applications"><DataTable cols={['company','role','status']} rows={apps}/></Panel></Page>}
+function Placements(){
+ const[rows,setRows]=useState([]),[apps,setApps]=useState([]),[history,setHistory]=useState([]),[stats,setStats]=useState(null),[filter,setFilter]=useState('ALL');
+ async function load(){
+   const[a,b,c,d]=await Promise.all([api.get('/placement-upgrades/student'),api.get('/student/applications'),api.get('/placement-upgrades/history'),api.get('/placement-upgrades/stats')]);
+   setRows(a.data);setApps(b.data);setHistory(c.data);setStats(d.data);
+ }
+ useEffect(()=>{load()},[]);
+ async function apply(id){
+   try{await api.post(`/placements/drives/${id}/apply`);load()}
+   catch(e){alert(e.response?.data?.message||'Unable to apply')}
+ }
+ const visible=rows.filter(d=>filter==='ALL'||(filter==='ELIGIBLE'&&d.eligible)||(filter==='APPLIED'&&d.applicationStatus));
+ return <Page title="Placements" subtitle="Compare opportunities, understand eligibility, and track every application.">
+   <div className="stat-grid placement-stats">
+     <Stat label="OPEN DRIVES" value={stats?.openDrives??'—'} note="Current opportunities" icon={BriefcaseBusiness}/>
+     <Stat label="MY APPLICATIONS" value={stats?.applications??'—'} note="Submitted applications" accent="orange" icon={FileText}/>
+     <Stat label="ACTIVE" value={stats?.activeApplications??'—'} note="Awaiting an outcome" icon={Clock3}/>
+     <Stat label="SELECTED" value={stats?.selected??'—'} note="Placement history" accent="cream" icon={CheckCircle2}/>
+   </div>
+   <div className="day-tabs placement-filters">{['ALL','ELIGIBLE','APPLIED'].map(x=><button key={x} className={filter===x?'active':''} onClick={()=>setFilter(x)}>{x[0]+x.slice(1).toLowerCase()}</button>)}</div>
+   <div className="cards">{visible.map(d=><article className="op-card placement-card" key={d.id}>
+     <div className="placement-company"><span className="label">COMPANY</span><h3>{d.company}</h3></div>
+     <p>{d.jobRole}</p><strong>₹{d.packageLpa} LPA</strong>
+     <div className="eligibility-box"><b>Eligibility</b><span className={d.cgpaEligible?'ok':'bad'}>{d.cgpaEligible?'✓':'×'} CGPA {d.minimumCgpa}</span><span className={d.branchEligible?'ok':'bad'}>{d.branchEligible?'✓':'×'} {d.eligibleBranches||'All branches'}</span></div>
+     <small>Deadline · {d.deadline}</small>
+     {d.applicationStatus?<div className="status-ok"><CheckCircle2 size={15}/> {d.applicationStatus}</div>:<button className="primary" disabled={!d.eligible} onClick={()=>apply(d.id)}>{d.eligible?'Apply now':'Not eligible'} <ArrowUpRight size={14}/></button>}
+   </article>)}</div>
+   {!visible.length&&<div className="panel empty">No placement drives match this filter.</div>}
+   <div className="profile-grid placement-bottom">
+     <Panel title="My applications" meta="Current application status"><DataTable cols={['company','role','status']} rows={apps}/></Panel>
+     <Panel title="Placement history" meta="Selected opportunities"><DataTable cols={['company','role','packageLpa','selectedAt']} rows={history}/></Panel>
+   </div>
+ </Page>
+}
 
 function FacultyDashboard(){return <Page eyebrow="FACULTY DASHBOARD" title="Good morning." subtitle="Keep your classes moving without unnecessary admin overhead."><div className="stat-grid"><Stat label="ASSIGNED CLASSES" value="2" note="Current term"/><Stat label="STUDENTS" value="64" note="Across your classes"/><Stat label="ASSIGNMENTS" value="1" note="Active"/><Stat label="PENDING REVIEW" value="0" note="Submissions"/></div><Panel title="Next actions"><div className="action-list"><NavLink to="/faculty/attendance"><ClipboardCheck size={16}/>Take today's attendance<ArrowUpRight size={15}/></NavLink><NavLink to="/faculty/assignments"><FileText size={16}/>Publish an assignment<ArrowUpRight size={15}/></NavLink></div></Panel></Page>}
 function FacultyAttendance(){const[form,setForm]=useState({studentId:1,subjectId:1,date:new Date().toISOString().slice(0,10),present:true});async function save(e){e.preventDefault();await api.post('/faculty/attendance',form);alert('Attendance saved.')}return <Page title="Mark attendance" subtitle="Record attendance for a student and subject."><Panel title="Attendance entry"><form className="form-grid" onSubmit={save}><label>Student ID<input value={form.studentId} onChange={e=>setForm({...form,studentId:e.target.value})}/></label><label>Subject ID<input value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}/></label><label>Date<input type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})}/></label><label>Status<select value={form.present} onChange={e=>setForm({...form,present:e.target.value==='true'})}><option value="true">Present</option><option value="false">Absent</option></select></label><button className="primary">Save attendance</button></form></Panel></Page>}
@@ -100,7 +133,23 @@ function FacultySubmissions(){const[rows,setRows]=useState([]);const[busy,setBus
 function AdminDashboard(){return <Page eyebrow="ADMIN DASHBOARD" title="System overview" subtitle="A restrained control surface for campus operations."><div className="stat-grid"><Stat label="STUDENTS" value="1" note="Registered"/><Stat label="FACULTY" value="1" note="Active accounts"/><Stat label="OPEN DRIVES" value="1" note="Current term"/><Stat label="APPLICATIONS" value="0" note="Placement activity"/></div><Panel title="System status"><div className="status-ok"><CheckCircle2 size={16}/> API connected</div></Panel></Page>}
 function AdminCompanies(){const[form,setForm]=useState({name:'',website:'',description:''});const[busy,setBusy]=useState(false);async function save(e){e.preventDefault();setBusy(true);try{await api.post('/admin/companies',form);alert('Company created.');setForm({name:'',website:'',description:''})}catch(e){alert(e.response?.data?.message||'Unable to create company')}finally{setBusy(false)}}return <Page title="Companies" subtitle="Add organizations for placement drives."><Panel title="New company"><form onSubmit={save}>{['name','website','description'].map(k=><label key={k}>{k}<input required={k==='name'} value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})}/></label>)}<button className="primary" disabled={busy}>{busy?'Saving…':'Add company'}</button></form></Panel></Page>}
 function AdminDrives(){const[form,setForm]=useState({companyId:1,jobRole:'',packageLpa:'',minimumCgpa:'',deadline:'',eligibleBranches:'CS,IT'});const[busy,setBusy]=useState(false);async function save(e){e.preventDefault();setBusy(true);try{await api.post('/admin/drives',form);alert('Placement drive created.');setForm({...form,jobRole:'',packageLpa:'',minimumCgpa:'',deadline:''})}catch(e){alert(e.response?.data?.message||'Unable to create drive')}finally{setBusy(false)}}return <Page title="Placement drives" subtitle="Create opportunities students can discover and apply to."><Panel title="New placement drive"><form className="form-grid" onSubmit={save}><label>Company ID<input required type="number" value={form.companyId} onChange={e=>setForm({...form,companyId:e.target.value})}/></label><label>Job role<input required value={form.jobRole} onChange={e=>setForm({...form,jobRole:e.target.value})}/></label><label>Package (LPA)<input required type="number" step="0.1" value={form.packageLpa} onChange={e=>setForm({...form,packageLpa:e.target.value})}/></label><label>Minimum CGPA<input required type="number" step="0.1" value={form.minimumCgpa} onChange={e=>setForm({...form,minimumCgpa:e.target.value})}/></label><label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label><label>Eligible branches<input value={form.eligibleBranches} onChange={e=>setForm({...form,eligibleBranches:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Creating…':'Create drive'}</button></form></Panel></Page>}
-function AdminApplications(){const[rows,setRows]=useState([]);useEffect(()=>{api.get('/admin/applications').then(r=>setRows(r.data))},[]);return <Page title="Applications" subtitle="Review student placement applications."><DataTable cols={['id','status','appliedAt']} rows={rows}/></Page>}
+function AdminApplications(){
+ const[rows,setRows]=useState([]),[busy,setBusy]=useState(null);
+ async function load(){const r=await api.get('/admin/applications');setRows(r.data)}
+ useEffect(()=>{load()},[]);
+ async function changeStatus(id,status){
+   setBusy(id);
+   try{await api.patch(`/placement-upgrades/admin/applications/${id}/status`,{status});await load()}
+   catch(e){alert(e.response?.data?.message||'Unable to update status')}
+   finally{setBusy(null)}
+ }
+ return <Page title="Applications" subtitle="Review and update placement application progress.">
+   <div className="table-wrap"><table><thead><tr><th>Student</th><th>Company</th><th>Role</th><th>Applied</th><th>Status</th></tr></thead><tbody>
+   {rows.map(r=><tr key={r.id}><td>{r.student?.user?.fullName||r.student?.name||'Student'}</td><td>{r.placementDrive?.company?.name||'—'}</td><td>{r.placementDrive?.jobRole||'—'}</td><td>{r.appliedAt||'—'}</td><td><select className="status-select" disabled={busy===r.id} value={r.status} onChange={e=>changeStatus(r.id,e.target.value)}>{['APPLIED','SHORTLISTED','INTERVIEW','SELECTED','REJECTED'].map(s=><option key={s}>{s}</option>)}</select></td></tr>)}
+   </tbody></table></div>
+   {!rows.length&&<div className="panel empty">No applications yet.</div>}
+ </Page>
+}
 
 function Timetable(){
  const[rows,setRows]=useState([]),[day,setDay]=useState('ALL');
