@@ -17,7 +17,7 @@ function Login() {
   return <main className="login-page"><div className="login-orb orb-one"/><div className="login-orb orb-two"/>
     <section className="login-card"><div className="brand-mark">C</div><p className="eyebrow">COLLEGE PORTAL</p><h1>CampusConnect</h1><p className="login-copy">A focused academic and placement workspace.</p>
       <form onSubmit={submit}><label>Email<input value={email} onChange={e=>setEmail(e.target.value)} autoComplete="username"/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password"/></label>{error&&<div className="error">{error}</div>}<button className="primary wide" disabled={busy}>{busy?'Signing in…':'Sign in'} <ArrowUpRight size={15}/></button></form>
-      <div className="demo-box"><b>Demo access</b><span>student@campusconnect.local · Student@123</span></div>
+      <div className="demo-box"><b>Demo access</b><span>student@campusconnect.local · CampusConnect!7Qv#29Lm</span></div>
     </section>
   </main>
 }
