@@ -124,10 +124,65 @@ function Placements(){
  </Page>
 }
 
-function FacultyDashboard(){return <Page eyebrow="FACULTY DASHBOARD" title="Good morning." subtitle="Keep your classes moving without unnecessary admin overhead."><div className="stat-grid"><Stat label="ASSIGNED CLASSES" value="2" note="Current term"/><Stat label="STUDENTS" value="64" note="Across your classes"/><Stat label="ASSIGNMENTS" value="1" note="Active"/><Stat label="PENDING REVIEW" value="0" note="Submissions"/></div><Panel title="Next actions"><div className="action-list"><NavLink to="/faculty/attendance"><ClipboardCheck size={16}/>Take today's attendance<ArrowUpRight size={15}/></NavLink><NavLink to="/faculty/assignments"><FileText size={16}/>Publish an assignment<ArrowUpRight size={15}/></NavLink></div></Panel></Page>}
-function FacultyAttendance(){const[form,setForm]=useState({studentId:1,subjectId:1,date:new Date().toISOString().slice(0,10),present:true});async function save(e){e.preventDefault();await api.post('/faculty/attendance',form);alert('Attendance saved.')}return <Page title="Mark attendance" subtitle="Record attendance for a student and subject."><Panel title="Attendance entry"><form className="form-grid" onSubmit={save}><label>Student ID<input value={form.studentId} onChange={e=>setForm({...form,studentId:e.target.value})}/></label><label>Subject ID<input value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}/></label><label>Date<input type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})}/></label><label>Status<select value={form.present} onChange={e=>setForm({...form,present:e.target.value==='true'})}><option value="true">Present</option><option value="false">Absent</option></select></label><button className="primary">Save attendance</button></form></Panel></Page>}
-function FacultyMarks(){const[form,setForm]=useState({studentId:1,subjectId:1,internalMarks:'',totalMarks:50});const[busy,setBusy]=useState(false);async function save(e){e.preventDefault();setBusy(true);try{await api.post('/faculty/marks',form);alert('Marks saved.');setForm({...form,internalMarks:''})}catch(e){alert(e.response?.data?.message||'Unable to save marks')}finally{setBusy(false)}}return <Page title="Record marks" subtitle="Add internal assessment marks for a student."><Panel title="Marks entry"><form className="form-grid" onSubmit={save}><label>Student ID<input required type="number" value={form.studentId} onChange={e=>setForm({...form,studentId:e.target.value})}/></label><label>Subject ID<input required type="number" value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}/></label><label>Marks obtained<input required type="number" min="0" value={form.internalMarks} onChange={e=>setForm({...form,internalMarks:e.target.value})}/></label><label>Total marks<input required type="number" min="1" value={form.totalMarks} onChange={e=>setForm({...form,totalMarks:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Saving…':'Save marks'}</button></form></Panel></Page>}
-function FacultyAssignments(){const[form,setForm]=useState({title:'',description:'',subjectId:1,deadline:''});const[busy,setBusy]=useState(false);async function save(e){e.preventDefault();setBusy(true);try{await api.post('/faculty/assignments',form);alert('Assignment published.');setForm({title:'',description:'',subjectId:1,deadline:''})}catch(e){alert(e.response?.data?.message||'Unable to publish assignment')}finally{setBusy(false)}}return <Page title="Create assignment" subtitle="Publish a clear task with a deadline."><Panel title="New assignment"><form onSubmit={save}><label>Title<input required value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/></label><label>Description<textarea required value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label><label>Subject ID<input required type="number" value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}/></label><label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Publishing…':'Publish assignment'}</button></form></Panel></Page>}
+function FacultyDashboard(){
+ const[data,setData]=useState(null),[busy,setBusy]=useState(true);
+ useEffect(()=>{api.get('/faculty/overview').then(r=>setData(r.data)).catch(()=>setData(null)).finally(()=>setBusy(false))},[]);
+ if(busy)return <Page eyebrow="FACULTY DASHBOARD" title="Loading…"><Loading/></Page>;
+ return <Page eyebrow="FACULTY DASHBOARD" title={`Good morning, ${data?.faculty?.split(' ')[0]||'Faculty'}.`} subtitle={`${data?.department||'Department'} · ${data?.departmentCode||''}`}>
+   <div className="stat-grid">
+     <Stat label="STUDENTS" value={data?.students??'—'} note="In your department" icon={Users}/>
+     <Stat label="SUBJECTS" value={data?.subjects??'—'} note="Available to manage" accent="orange" icon={BookOpen}/>
+     <Stat label="ASSIGNMENTS" value={data?.assignments??'—'} note="Published by you" accent="cream" icon={FileText}/>
+     <Stat label="PENDING REVIEW" value={data?.pendingReviews??'—'} note="Awaiting grades" icon={CheckCircle2}/>
+   </div>
+   <Panel title="Quick actions" meta="Common faculty workflows"><div className="action-list">
+     <NavLink to="/faculty/attendance"><ClipboardCheck size={16}/>Take attendance<ArrowUpRight size={15}/></NavLink>
+     <NavLink to="/faculty/marks"><GraduationCap size={16}/>Record marks<ArrowUpRight size={15}/></NavLink>
+     <NavLink to="/faculty/assignments"><FileText size={16}/>Publish assignment<ArrowUpRight size={15}/></NavLink>
+     <NavLink to="/faculty/submissions"><CheckCircle2 size={16}/>Review submissions<ArrowUpRight size={15}/></NavLink>
+   </div></Panel>
+ </Page>
+}
+function FacultyAttendance(){
+ const[students,setStudents]=useState([]),[subjects,setSubjects]=useState([]),[form,setForm]=useState({studentId:'',subjectId:'',date:new Date().toISOString().slice(0,10),present:true}),[busy,setBusy]=useState(false);
+ useEffect(()=>{Promise.all([api.get('/faculty/students'),api.get('/faculty/subjects')]).then(([a,b])=>{setStudents(a.data);setSubjects(b.data)}).catch(()=>{})},[]);
+ async function save(e){e.preventDefault();setBusy(true);try{await api.post('/faculty/attendance',{...form,studentId:Number(form.studentId),subjectId:Number(form.subjectId)});alert('Attendance saved.')}catch(e){alert(e.response?.data?.message||'Unable to save attendance')}finally{setBusy(false)}}
+ return <Page title="Mark attendance" subtitle="Select a student and subject instead of entering database IDs."><Panel title="Attendance entry"><form className="form-grid" onSubmit={save}>
+   <label>Student<select required value={form.studentId} onChange={e=>setForm({...form,studentId:e.target.value})}><option value="">Choose student</option>{students.map(s=><option key={s.id} value={s.id}>{s.rollNumber} · {s.name}</option>)}</select></label>
+   <label>Subject<select required value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}><option value="">Choose subject</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select></label>
+   <label>Date<input type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})}/></label>
+   <label>Status<select value={form.present} onChange={e=>setForm({...form,present:e.target.value==='true'})}><option value="true">Present</option><option value="false">Absent</option></select></label>
+   <button className="primary" disabled={busy}>{busy?'Saving…':'Save attendance'}</button>
+ </form></Panel></Page>
+}
+function FacultyMarks(){
+ const[students,setStudents]=useState([]),[subjects,setSubjects]=useState([]),[form,setForm]=useState({studentId:'',subjectId:'',internalMarks:'',totalMarks:50}),[busy,setBusy]=useState(false);
+ useEffect(()=>{Promise.all([api.get('/faculty/students'),api.get('/faculty/subjects')]).then(([a,b])=>{setStudents(a.data);setSubjects(b.data)}).catch(()=>{})},[]);
+ async function save(e){e.preventDefault();if(Number(form.internalMarks)>Number(form.totalMarks))return alert('Marks obtained cannot exceed total marks.');setBusy(true);try{await api.post('/faculty/marks',{...form,studentId:Number(form.studentId),subjectId:Number(form.subjectId),internalMarks:Number(form.internalMarks),totalMarks:Number(form.totalMarks)});alert('Marks saved.');setForm({...form,internalMarks:''})}catch(e){alert(e.response?.data?.message||'Unable to save marks')}finally{setBusy(false)}}
+ return <Page title="Record marks" subtitle="Choose the student and subject, then enter the assessment score."><Panel title="Marks entry"><form className="form-grid" onSubmit={save}>
+   <label>Student<select required value={form.studentId} onChange={e=>setForm({...form,studentId:e.target.value})}><option value="">Choose student</option>{students.map(s=><option key={s.id} value={s.id}>{s.rollNumber} · {s.name}</option>)}</select></label>
+   <label>Subject<select required value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}><option value="">Choose subject</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select></label>
+   <label>Marks obtained<input required type="number" min="0" value={form.internalMarks} onChange={e=>setForm({...form,internalMarks:e.target.value})}/></label>
+   <label>Total marks<input required type="number" min="1" value={form.totalMarks} onChange={e=>setForm({...form,totalMarks:e.target.value})}/></label>
+   <button className="primary" disabled={busy}>{busy?'Saving…':'Save marks'}</button>
+ </form></Panel></Page>
+}
+function FacultyAssignments(){
+ const[subjects,setSubjects]=useState([]),[rows,setRows]=useState([]),[form,setForm]=useState({title:'',description:'',subjectId:'',deadline:''}),[busy,setBusy]=useState(false);
+ async function load(){const r=await api.get('/faculty/assignments/mine');setRows(r.data)}
+ useEffect(()=>{Promise.all([api.get('/faculty/subjects'),load()]).catch(()=>{})},[]);
+ async function save(e){e.preventDefault();setBusy(true);try{await api.post('/faculty/assignments',{...form,subjectId:Number(form.subjectId)});alert('Assignment published.');setForm({title:'',description:'',subjectId:'',deadline:''});load()}catch(e){alert(e.response?.data?.message||'Unable to publish assignment')}finally{setBusy(false)}}
+ return <Page title="Assignments" subtitle="Publish tasks and see what you have already assigned.">
+   <Panel title="New assignment" meta="Clear instructions + a firm deadline"><form onSubmit={save}>
+    <label>Title<input required value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/></label>
+    <label>Description<textarea required value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label>
+    <label>Subject<select required value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}><option value="">Choose subject</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select></label>
+    <label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label>
+    <button className="primary" disabled={busy}>{busy?'Publishing…':'Publish assignment'}</button>
+   </form></Panel>
+   <Panel title="Published by me" meta="Your current assignments"><DataTable cols={['title','subject','deadline','description']} rows={rows}/></Panel>
+ </Page>
+}
 
 function FacultySubmissions(){const[rows,setRows]=useState([]);const[busy,setBusy]=useState(null);async function load(){const r=await api.get('/faculty/submissions');setRows(r.data)}useEffect(()=>{load()},[]);async function grade(id){const marks=prompt('Marks (0-100):');if(marks===null)return;const feedback=prompt('Feedback:')||'';setBusy(id);try{await api.patch(`/faculty/submissions/${id}/grade`,{marks,feedback});await load()}catch(e){alert(e.response?.data?.message||'Unable to grade submission')}finally{setBusy(null)}}return <Page title="Review submissions" subtitle="Grade student work and leave concise feedback."><div className="assignment-list">{rows.map(s=><article className="assignment-item" key={s.id}><div><span className="label">{s.assignment}</span><h3>{s.student}</h3><p>{s.fileName}</p><small>Submitted · {s.submittedAt}</small></div><div className="assignment-action"><span className="status-ok">{s.marks==='—'?'Not graded':`Marks: ${s.marks}`}</span><button className="primary" disabled={busy===s.id} onClick={()=>grade(s.id)}>{busy===s.id?'Saving…':'Grade'}</button></div></article>)}{!rows.length&&<div className="panel empty">No submissions yet.</div>}</div></Page>}
 function AdminDashboard(){return <Page eyebrow="ADMIN DASHBOARD" title="System overview" subtitle="A restrained control surface for campus operations."><div className="stat-grid"><Stat label="STUDENTS" value="1" note="Registered"/><Stat label="FACULTY" value="1" note="Active accounts"/><Stat label="OPEN DRIVES" value="1" note="Current term"/><Stat label="APPLICATIONS" value="0" note="Placement activity"/></div><Panel title="System status"><div className="status-ok"><CheckCircle2 size={16}/> API connected</div></Panel></Page>}
