@@ -23,6 +23,6 @@ public class Submission {
     public String getFileName(){return fileName;} public LocalDateTime getSubmittedAt(){return submittedAt;}
     public byte[] getFileData(){return fileData;} public String getContentType(){return contentType;}
     public Double getMarks(){return marks;} public String getFeedback(){return feedback;}
-    public void attachFile(byte[] data,String type){this.fileData=data;this.contentType=type;}
+    public void attachFile(byte[] data,String type,String fileName){this.fileData=data;this.contentType=type;this.fileName=fileName;this.submittedAt=LocalDateTime.now();}
     public void grade(Double marks,String feedback){this.marks=marks;this.feedback=feedback;}
 }
