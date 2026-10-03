@@ -1,4 +1,4 @@
-# CampusConnect — Tier 1
+# CampusConnect — Tier 2
 
 Clean full-stack prototype for a college management and placement portal.
 
@@ -10,10 +10,10 @@ Clean full-stack prototype for a college management and placement portal.
 - Profile editing
 - Attendance records
 - Internal marks
-- Assignments with prototype submission flow
-- Submission history
-- Placement drives and eligibility check
-- Placement application tracking
+- Assignments with file submission and history
+- Placement drives, eligibility and application tracking
+- Academic performance analytics
+- Timetable and subject details
 - College notices
 
 ### Faculty
@@ -21,19 +21,21 @@ Clean full-stack prototype for a college management and placement portal.
 - Mark attendance
 - Record internal marks
 - Publish assignments
+- Review and grade student submissions
 
 ### Admin
 - Dashboard
+- User account management
 - Create companies
 - Create placement drives
-- Review placement applications
+- Review and update placement applications
 
 ## Stack
 - Frontend: React + Vite
 - Backend: Java 21 + Spring Boot 3.5
 - Security: Spring Security + JWT
 - ORM: Spring Data JPA / Hibernate
-- Database: MySQL 8.4
+- Database: MySQL
 - API docs: Springdoc/OpenAPI
 
 ## Run
@@ -44,7 +46,19 @@ Clean full-stack prototype for a college management and placement portal.
 docker compose up -d
 ```
 
-### 2. Start backend
+### 2. Configure demo account passwords
+
+Set these environment variables before starting a fresh database:
+
+```text
+DEMO_ADMIN_PASSWORD
+DEMO_FACULTY_PASSWORD
+DEMO_STUDENT_PASSWORD
+```
+
+The deployed Railway environment uses these variables for demo account credentials. Do not commit passwords to the repository.
+
+### 3. Start backend
 
 From `backend`:
 
@@ -52,13 +66,7 @@ From `backend`:
 mvn spring-boot:run
 ```
 
-or, if Maven is available on Windows:
-
-```powershell
-mvn spring-boot:run
-```
-
-### 3. Start frontend
+### 4. Start frontend
 
 From `frontend`:
 
@@ -70,25 +78,25 @@ npm run dev
 Open `http://localhost:5173`.
 
 Backend: `http://localhost:8080`
+
 Swagger: `http://localhost:8080/swagger-ui.html`
 
 ## Demo accounts
 
+The application uses these demo email addresses:
+
 ```text
 Student
 student@campusconnect.local
-Student@123
 
 Faculty
 faculty@campusconnect.local
-Faculty@123
 
 Admin
 admin@campusconnect.local
-Admin@123
 ```
 
-These are development credentials only.
+Passwords are intentionally kept out of source control and should be supplied through environment variables.
 
 ## Visual direction
 
@@ -96,4 +104,4 @@ The UI uses the approved warm off-white, deep green and orange visual direction 
 
 ## Verification note
 
-The source has been updated as a complete Tier 1 implementation pass. Dependency installation/build could not be completed in the build environment because the package download timed out, so runtime verification should be performed locally after `npm install` and Maven dependencies are available.
+The production deployment is hosted with Vercel for the frontend and Railway for the backend/database.
