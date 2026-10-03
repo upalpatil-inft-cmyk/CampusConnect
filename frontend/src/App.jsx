@@ -246,16 +246,18 @@ function Stat({label,value,note,accent='green',icon:Icon}){return <article class
 function Loading(){return <div className="loading">Loading your campus data…</div>}
 
 function StudentDashboard(){
- const [me,setMe]=useState(null),[notices,setNotices]=useState([]),[marks,setMarks]=useState([]),[assignments,setAssignments]=useState([]),[attendance,setAttendance]=useState([]),[placements,setPlacements]=useState([]),[analytics,setAnalytics]=useState(null),[busy,setBusy]=useState(true);
+ const [me,setMe]=useState(null),[notices,setNotices]=useState([]),[marks,setMarks]=useState([]),[assignments,setAssignments]=useState([]),[attendance,setAttendance]=useState([]),[placements,setPlacements]=useState([]),[analytics,setAnalytics]=useState(null),[busy,setBusy]=useState(true),[loadError,setLoadError]=useState(false);
  useEffect(()=>{
    Promise.all([api.get('/student/me'),api.get('/notices'),api.get('/student/marks'),api.get('/assignments'),api.get('/student/attendance'),api.get('/placement-upgrades/student'),api.get('/student/analytics')]).then(([a,b,c,d,e,f,g])=>{
      setMe(a.data);setNotices(Array.isArray(b.data)?b.data:[]);setMarks(Array.isArray(c.data)?c.data:[]);setAssignments(Array.isArray(d.data)?d.data:[]);setAttendance(Array.isArray(e.data)?e.data:[]);setPlacements(Array.isArray(f.data)?f.data:[]);setAnalytics(g.data);
-   }).catch(()=>{}).finally(()=>setBusy(false));
+   }).catch(()=>setLoadError(true)).finally(()=>setBusy(false));
  },[]);
  const attendancePct=analytics?.attendancePercentage!=null?`${analytics.attendancePercentage}%`:attendance.length?`${Math.round(attendance.filter(x=>x.present).length/attendance.length*100)}%`:'—';
  const activeAssignments=assignments.filter(a=>a.deadline>=new Date().toISOString().slice(0,10));
  const eligibleDrives=placements.filter(x=>x.eligible).length;
  const greeting=(()=>{const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening'})();
+ if(busy)return <Page eyebrow="STUDENT DASHBOARD" title="Loading your dashboard…" subtitle="Pulling together your latest campus data."><div className="dashboard-loading"><div className="loading-orb"/><b>Preparing your semester snapshot</b><span>Academics, assignments and opportunities are loading.</span></div></Page>;
+ if(loadError && !me)return <Page eyebrow="STUDENT DASHBOARD" title="We couldn't load your dashboard." subtitle="Your session is still active. Try again in a moment."><div className="dashboard-error"><CircleAlert size={20}/><div><b>Campus data is temporarily unavailable.</b><span>Refresh the page to retry the dashboard request.</span></div><button className="secondary-btn" onClick={()=>window.location.reload()}>Retry</button></div></Page>;
  return <Page eyebrow="STUDENT DASHBOARD" title={`${greeting}, ${me?.name?.split(' ')[0]||'there'}.`} subtitle="Your semester at a glance — academics, work and opportunities." action={<div className="semester">Semester {me?.semester??5}<i>•</i>{me?.department||'B.Tech INFT'}</div>}>
   <div className="dashboard-hero"><div><span className="label">THIS SEMESTER</span><h2>Stay on top of your campus life.</h2><p>Track performance, finish assignments and catch the opportunities that match your profile.</p></div><div className="hero-metrics"><div><strong>{analytics?.cgpa??me?.cgpa??'—'}</strong><span>CGPA</span></div><div><strong>{attendancePct}</strong><span>Attendance</span></div><div><strong>{eligibleDrives}</strong><span>Eligible drives</span></div></div></div>
   <div className="dashboard-stats"><Stat label="ATTENDANCE" value={attendancePct} note="Across recorded classes" icon={CheckCircle2}/><Stat label="CURRENT CGPA" value={me?.cgpa??'—'} note="Latest academic record" accent="orange" icon={GraduationCap}/><Stat label="OPEN ASSIGNMENTS" value={activeAssignments.length} note="Deadlines still open" accent="cream" icon={FileText}/><Stat label="ELIGIBLE DRIVES" value={eligibleDrives} note="Based on your profile" icon={BriefcaseBusiness}/></div>
