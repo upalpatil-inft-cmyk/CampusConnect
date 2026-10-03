@@ -251,3 +251,40 @@
   .form-message{font-size:9px}
   .detail-grid{grid-template-columns:1fr}
 }
+
+/* Final visual consistency pass */
+.panel,.stat,.subject-card,.class-card,.op-card,.assignment-card{
+  border:1px solid var(--line);
+  box-shadow:0 12px 32px rgba(38,44,39,.045);
+}
+button.primary,button.secondary-btn,.primary,.secondary-btn,input,select,textarea{
+  transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+button.primary:not(:disabled):hover,.primary:not(:disabled):hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 20px rgba(47,70,58,.12);
+}
+button.secondary-btn:not(:disabled):hover,.secondary-btn:not(:disabled):hover{
+  transform:translateY(-1px);
+}
+input:focus,select:focus,textarea:focus{
+  outline:none;
+  border-color:rgba(47,70,58,.34);
+  box-shadow:0 0 0 3px rgba(47,70,58,.07);
+}
+button:disabled{cursor:not-allowed;opacity:.62}
+.status-ok,.status-bad{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  border-radius:999px;
+  padding:5px 8px;
+  font-size:9px;
+  font-weight:700;
+}
+.table-wrap{border-radius:16px}
+.table-wrap table{width:100%}
+@media(max-width:700px){
+  .panel,.stat,.subject-card,.class-card,.op-card,.assignment-card{box-shadow:0 8px 24px rgba(38,44,39,.04)}
+  .table-wrap{border-radius:14px}
+}
