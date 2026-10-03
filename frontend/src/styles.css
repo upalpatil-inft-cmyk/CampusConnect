@@ -201,3 +201,53 @@
 
 
 .form-message{display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 12px;border-radius:12px;font-size:10px;font-weight:600}.form-message.success{background:#eef6ef;color:#3f6549;border:1px solid #d9e8dc}.form-message.error{background:#fff3ef;color:#914f3d;border:1px solid #efd8d0}.form-message span{display:grid;place-items:center;flex:none}
+
+/* Mobile / responsive polish */
+@media(max-width:900px){
+  .page{padding:24px 3.5vw 40px}
+  .page-head{gap:14px}
+  .profile-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .table-wrap table{min-width:640px}
+  .cards{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .topbar{padding:0 14px}
+  .topnav{gap:0}
+  .top-actions{gap:5px}
+  .profile-trigger .profile-meta{display:none}
+  .dropdown{right:-6px}
+  .notifications-dropdown{right:-54px}
+  .nav-dropdown{left:auto;right:0;width:210px}
+  .page{padding-top:20px}
+  .page-head{flex-direction:column;align-items:flex-start}
+  .page-head .semester{align-self:flex-start}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .performance-grid{grid-template-columns:1fr}
+  .assignment-item{flex-direction:column;align-items:stretch;gap:14px}
+  .assignment-action{justify-content:flex-start}
+  .placement-bottom{grid-template-columns:1fr}
+  .detail-grid{grid-template-columns:1fr 1fr}
+  .form-grid .primary{width:100%}
+}
+@media(max-width:480px){
+  .brand{gap:8px}
+  .brand>span:first-child{width:30px;height:30px;font-size:13px}
+  .topbar{height:62px}
+  .top-actions .icon-btn{width:34px;height:34px}
+  .nav-dropdown-trigger,.topnav a{padding:8px}
+  .nav-dropdown{top:calc(100% + 7px)}
+  .notifications-dropdown{right:-75px}
+  .dropdown{max-width:calc(100vw - 20px)}
+  .stat-grid,.dashboard-stats{grid-template-columns:1fr}
+  .dashboard-hero h2{font-size:23px}
+  .dashboard-hero p{font-size:11px}
+  .hero-metrics{grid-template-columns:1fr!important}
+  .hero-metrics div{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .hero-metrics strong{font-size:17px}
+  .panel{padding:16px}
+  .empty-state{padding:18px 15px}
+  .form-message{font-size:9px}
+  .detail-grid{grid-template-columns:1fr}
+}
