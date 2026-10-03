@@ -10,17 +10,24 @@ function Protected({ children }) { return localStorage.getItem('campusconnect_to
 
 function Login() {
   const nav = useNavigate();
-  const [email,setEmail]=useState('student@campusconnect.local');
-  const [password,setPassword]=useState('CampusConnect!7Qv#29Lm');
+  const [email,setEmail]=useState('');
+  const [password,setPassword]=useState('');
   const [error,setError]=useState(''); const [busy,setBusy]=useState(false);
-  async function submit(e){e.preventDefault();setBusy(true);setError('');try{await login(email,password);nav('/')}catch{setError('Invalid email or password.')}finally{setBusy(false)}}
-  return <main className="login-page"><div className="login-orb orb-one"/><div className="login-orb orb-two"/>
-    <section className="login-card"><div className="brand-mark">C</div><p className="eyebrow">COLLEGE PORTAL</p><h1>CampusConnect</h1><p className="login-copy">A focused academic and placement workspace.</p>
-      <form onSubmit={submit}><label>Email<input value={email} onChange={e=>setEmail(e.target.value)} autoComplete="username"/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password"/></label>{error&&<div className="error">{error}</div>}<button className="primary wide" disabled={busy}>{busy?'Signing in…':'Sign in'} <ArrowUpRight size={15}/></button></form>
-      <div className="demo-box"><b>Demo access</b><span>student@campusconnect.local · CampusConnect!7Qv#29Lm</span></div>
-    </section>
-  </main>
-}
+  async function submit(e){
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try{
+      localStorage.clear();
+      await login(email.trim(), password);
+      nav('/', {replace:true});
+      window.setTimeout(() => window.location.reload(), 0);
+    }catch{
+      setError('Invalid email or password.');
+    }finally{
+      setBusy(false);
+    }
+  }
 
 function Shell({children}){
   const nav=useNavigate(); const r=role(); const name=localStorage.getItem('campusconnect_name')||'User';
