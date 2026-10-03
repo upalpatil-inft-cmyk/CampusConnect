@@ -103,7 +103,7 @@ function Assignments(){
    setBusy(true);
    try{
      const form=new FormData(); form.append('assignmentId',id); form.append('file',file);
-     await api.post('/assignments/submit-file',form,{headers:{'Content-Type':'multipart/form-data'}});
+     await api.post('/assignments/submit-file',form);
      setFile(null); await load();
    }catch(e){alert(e.response?.data?.message||'Unable to submit assignment')}finally{setBusy(false)}
  }
