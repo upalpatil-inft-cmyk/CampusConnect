@@ -37,7 +37,9 @@ public class FacultyController {
         var f=currentFaculty(a);
         var s=students.findById(r.studentId()).orElseThrow(); var sub=subjects.findById(r.subjectId()).orElseThrow();
         verifyScope(f,s,sub);
-        return attendance.save(new Attendance(s,sub,r.date(),r.present()));
+        var saved=attendance.save(new Attendance(s,sub,r.date(),r.present()));
+        return Map.of("id",saved.getId(),"studentId",s.getId(),"student",s.getUser().getFullName(),
+                "subject",sub.getName(),"date",saved.getDate(),"present",saved.isPresent());
     }
 
     @PostMapping("/marks")
@@ -45,7 +47,9 @@ public class FacultyController {
         var f=currentFaculty(a);
         var s=students.findById(r.studentId()).orElseThrow(); var sub=subjects.findById(r.subjectId()).orElseThrow();
         verifyScope(f,s,sub);
-        return marks.save(new Mark(s,sub,r.internalMarks(),r.totalMarks()));
+        var saved=marks.save(new Mark(s,sub,r.internalMarks(),r.totalMarks()));
+        return Map.of("id",saved.getId(),"studentId",s.getId(),"student",s.getUser().getFullName(),
+                "subject",sub.getName(),"internalMarks",saved.getInternalMarks(),"totalMarks",saved.getTotalMarks());
     }
 
     @PostMapping("/assignments")
