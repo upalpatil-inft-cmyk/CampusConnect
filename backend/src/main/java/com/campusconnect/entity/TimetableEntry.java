@@ -5,18 +5,25 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 @Entity
-@Table(name="timetable_entries")
+@Table(name="student_timetable")
 public class TimetableEntry {
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional=false)
-    @JoinColumn(name="subject_id", foreignKey=@ForeignKey(name="fk_timetable_subject"))
-    private Subject subject;
+    @Column(nullable=false)
+    private String subjectName;
 
-    @ManyToOne(optional=false)
-    @JoinColumn(name="faculty_id", foreignKey=@ForeignKey(name="fk_timetable_faculty"))
-    private Faculty faculty;
+    @Column(nullable=false)
+    private String subjectCode;
+
+    @Column(nullable=false)
+    private String facultyName;
+
+    @Column(nullable=false)
+    private String departmentCode;
+
+    @Column(nullable=false)
+    private int semester;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable=false)
@@ -33,10 +40,14 @@ public class TimetableEntry {
 
     public TimetableEntry() {}
 
-    public TimetableEntry(Subject subject, Faculty faculty, DayOfWeek dayOfWeek,
+    public TimetableEntry(String subjectName, String subjectCode, String facultyName,
+                          String departmentCode, int semester, DayOfWeek dayOfWeek,
                           LocalTime startTime, LocalTime endTime, String room) {
-        this.subject=subject;
-        this.faculty=faculty;
+        this.subjectName=subjectName;
+        this.subjectCode=subjectCode;
+        this.facultyName=facultyName;
+        this.departmentCode=departmentCode;
+        this.semester=semester;
         this.dayOfWeek=dayOfWeek;
         this.startTime=startTime;
         this.endTime=endTime;
@@ -44,8 +55,11 @@ public class TimetableEntry {
     }
 
     public Long getId(){return id;}
-    public Subject getSubject(){return subject;}
-    public Faculty getFaculty(){return faculty;}
+    public String getSubjectName(){return subjectName;}
+    public String getSubjectCode(){return subjectCode;}
+    public String getFacultyName(){return facultyName;}
+    public String getDepartmentCode(){return departmentCode;}
+    public int getSemester(){return semester;}
     public DayOfWeek getDayOfWeek(){return dayOfWeek;}
     public LocalTime getStartTime(){return startTime;}
     public LocalTime getEndTime(){return endTime;}
