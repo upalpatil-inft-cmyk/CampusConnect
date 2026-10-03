@@ -1,7 +1,7 @@
 import React from 'react'
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
-import { Bell, BriefcaseBusiness, CalendarDays, Clock3, MapPin, CheckCircle2, ClipboardCheck, FileText, GraduationCap, LayoutDashboard, LogOut, UserRound, Users, Building2, UserCheck, ArrowUpRight, BookOpen, CircleAlert } from 'lucide-react';
+import { Bell, BriefcaseBusiness, CalendarDays, Clock3, MapPin, CheckCircle2, ClipboardCheck, FileText, GraduationCap, LayoutDashboard, LogOut, UserRound, Users, Building2, UserCheck, ArrowUpRight, BookOpen, CircleAlert, TrendingUp } from 'lucide-react';
 import { api, login } from './api';
 
 const role = () => localStorage.getItem('campusconnect_role');
@@ -11,7 +11,7 @@ function Protected({ children }) { return localStorage.getItem('campusconnect_to
 function Login() {
   const nav = useNavigate();
   const [email,setEmail]=useState('student@campusconnect.local');
-  const [password,setPassword]=useState('Student@123');
+  const [password,setPassword]=useState('CampusConnect!7Qv#29Lm');
   const [error,setError]=useState(''); const [busy,setBusy]=useState(false);
   async function submit(e){e.preventDefault();setBusy(true);setError('');try{await login(email,password);nav('/')}catch{setError('Invalid email or password.')}finally{setBusy(false)}}
   return <main className="login-page"><div className="login-orb orb-one"/><div className="login-orb orb-two"/>
@@ -24,7 +24,7 @@ function Login() {
 
 function Shell({children}){
   const nav=useNavigate(); const r=role(); const name=localStorage.getItem('campusconnect_name')||'User';
-  const student=[['/','Overview',LayoutDashboard],['/profile','Profile',UserRound],['/timetable','Timetable',CalendarDays],['/subjects','Subjects',BookOpen],['/attendance','Attendance',ClipboardCheck],['/marks','Marks',GraduationCap],['/assignments','Assignments',FileText],['/placements','Placements',BriefcaseBusiness]];
+  const student=[['/','Overview',LayoutDashboard],['/profile','Profile',UserRound],['/timetable','Timetable',CalendarDays],['/subjects','Subjects',BookOpen],['/performance','Performance',TrendingUp],['/attendance','Attendance',ClipboardCheck],['/marks','Marks',GraduationCap],['/assignments','Assignments',FileText],['/placements','Placements',BriefcaseBusiness]];
   const faculty=[['/','Overview',LayoutDashboard],['/faculty/attendance','Attendance',ClipboardCheck],['/faculty/marks','Marks',GraduationCap],['/faculty/assignments','Assignments',FileText],['/faculty/submissions','Review',CheckCircle2]];
   const admin=[['/','Overview',LayoutDashboard],['/admin/users','Users',UserCheck],['/admin/companies','Companies',Building2],['/admin/drives','Placement Drives',BriefcaseBusiness],['/admin/applications','Applications',Users]];
   const links=r==='STUDENT'?student:r==='FACULTY'?faculty:admin;
@@ -57,6 +57,37 @@ function StudentDashboard(){
 function Profile(){const[me,setMe]=useState(null),[form,setForm]=useState({fullName:'',phone:'',githubUrl:'',linkedinUrl:''}),[busy,setBusy]=useState(false);useEffect(()=>{api.get('/student/me').then(r=>{setMe(r.data);setForm({fullName:r.data.name||'',phone:r.data.phone||'',githubUrl:r.data.githubUrl||'',linkedinUrl:r.data.linkedinUrl||''})})},[]);async function save(e){e.preventDefault();setBusy(true);try{const r=await api.put('/student/me',form);setMe(r.data);localStorage.setItem('campusconnect_name',r.data.name);alert('Profile updated.')}catch(e){alert(e.response?.data?.message||'Unable to update profile')}finally{setBusy(false)}}return <Page title="My profile" subtitle="Keep your academic identity and contact details up to date."><div className="profile-grid"><Panel title="Academic identity"><div className="detail-grid">{[['Roll number',me?.rollNumber],['Department',me?.department],['Semester',me?.semester],['CGPA',me?.cgpa],['Email',me?.email]].map(([k,v])=><div key={k}><span>{k}</span><strong>{v||'—'}</strong></div>)}</div></Panel><Panel title="Contact details"><form onSubmit={save}><label>Full name<input required value={form.fullName} onChange={e=>setForm({...form,fullName:e.target.value})}/></label><label>Phone<input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/></label><label>GitHub URL<input value={form.githubUrl} onChange={e=>setForm({...form,githubUrl:e.target.value})}/></label><label>LinkedIn URL<input value={form.linkedinUrl} onChange={e=>setForm({...form,linkedinUrl:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Saving…':'Save profile'}</button></form></Panel></div></Page>}
 function Attendance(){const[rows,setRows]=useState([]);useEffect(()=>{api.get('/student/attendance').then(r=>setRows(r.data))},[]);const present=rows.filter(x=>x.present).length;return <Page title="Attendance" subtitle="Subject-wise attendance records."><div className="stat-grid"><Stat label="RECORDED CLASSES" value={rows.length} note="Available records"/><Stat label="PRESENT" value={present} note="Classes attended"/></div><DataTable cols={['subject','date','present']} rows={rows}/></Page>}
 function Marks(){const[rows,setRows]=useState([]);useEffect(()=>{api.get('/student/marks').then(r=>setRows(r.data))},[]);return <Page title="Marks" subtitle="Your internal assessment performance."><DataTable cols={['subject','internalMarks','totalMarks']} rows={rows}/></Page>}
+function Performance(){
+ const[data,setData]=useState(null),[busy,setBusy]=useState(true);
+ useEffect(()=>{api.get('/student/analytics').then(r=>setData(r.data)).catch(()=>setData(null)).finally(()=>setBusy(false))},[]);
+ if(busy)return <Page title="Academic performance" subtitle="Your current semester performance at a glance."><Loading/></Page>;
+ if(!data)return <Page title="Academic performance" subtitle="Your current semester performance at a glance."><div className="panel empty">Unable to load academic analytics.</div></Page>;
+ return <Page title="Academic performance" subtitle={`Semester ${data.semester} · Marks, attendance and subject trends`} action={<div className="semester">Semester {data.semester} <i>•</i> Live data</div>}>
+   <div className="stat-grid performance-stats">
+     <Stat label="CURRENT CGPA" value={data.cgpa??'—'} note="Academic record" icon={GraduationCap}/>
+     <Stat label="MARKS AVERAGE" value={`${data.marksPercentage}%`} note={`${data.totalMarks}/${data.possibleMarks} marks`} accent="orange" icon={TrendingUp}/>
+     <Stat label="ATTENDANCE" value={`${data.attendancePercentage}%`} note={`${data.presentClasses}/${data.recordedClasses} classes present`} icon={CheckCircle2}/>
+     <Stat label="SUBJECTS" value={data.subjects} note="Current semester" accent="cream" icon={BookOpen}/>
+   </div>
+   <div className="performance-grid">
+     <Panel title="Subject performance" meta="Internal assessment percentage">
+       <div className="performance-list">{data.subjectPerformance.map(s=><div className="performance-row" key={s.id}>
+         <div className="performance-heading"><div><span className="label">{s.code}</span><h3>{s.name}</h3></div><strong>{s.percentage}%</strong></div>
+         <div className="progress-track"><span style={{width:`${Math.min(100,s.percentage)}%`}}/></div>
+         <div className="performance-meta"><span>{s.marks}/{s.totalMarks||'—'} marks</span><span>Grade <b>{s.grade}</b></span><span>Attendance <b>{s.attendance}%</b></span></div>
+       </div>)}{!data.subjectPerformance.length&&<div className="empty">No marks recorded for this semester yet.</div>}</div>
+     </Panel>
+     <Panel title="Performance breakdown" meta="Quick read of the current semester">
+       <div className="breakdown">
+         <div className="breakdown-item"><span>Marks</span><strong>{data.marksPercentage}%</strong><div className="progress-track"><span style={{width:`${Math.min(100,data.marksPercentage)}%`}}/></div></div>
+         <div className="breakdown-item"><span>Attendance</span><strong>{data.attendancePercentage}%</strong><div className="progress-track orange-track"><span style={{width:`${Math.min(100,data.attendancePercentage)}%`}}/></div></div>
+         <div className="performance-note"><CircleAlert size={16}/><p>Percentages are calculated from the marks and attendance records currently stored in CampusConnect.</p></div>
+       </div>
+     </Panel>
+   </div>
+ </Page>
+}
+
 function Assignments(){
  const[rows,setRows]=useState([]),[submissions,setSubmissions]=useState([]),[filter,setFilter]=useState('ALL'),[file,setFile]=useState(null),[busy,setBusy]=useState(false);
  async function load(){const[a,b]=await Promise.all([api.get('/assignments'),api.get('/assignments/student-submissions')]);setRows(a.data);setSubmissions(b.data)}
@@ -217,8 +248,7 @@ function AdminDrives(){
  useEffect(()=>{load()},[]);
  async function save(e){e.preventDefault();setBusy(true);try{await api.post('/admin/drives',form);setForm({...form,jobRole:'',packageLpa:'',minimumCgpa:'',deadline:''});await load()}catch(e){alert(e.response?.data?.message||'Unable to create drive')}finally{setBusy(false)}}
  return <Page title="Placement drives" subtitle="Create opportunities and review the current placement pipeline.">
-  <Panel title="New placement drive"><form className="form-grid" onSubmit={save}><label>Company<select required value={form.companyId} onChange={e=>setForm({...form,companyId:e.target.value})}><option value="">Select company</option>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Job role<input required value={form.jobRole} onChange={e=>setForm({...form,jobRole:e.target.value})}/></label><label>Package (LPA)<input required type="number" step="0.1" value={form.packageLpa} onChange={e=>setForm({...form,packageLpa:e.target.value})}/></label><label>Minimum CGPA<input required type="number" step="0.1" value={form.minimumCgpa} onChange={e=>setForm({...form,minimumCgpa:e.target.value})}/></label><label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label><label>Eligible branches<input value={form.eligibleBranches} onChange={e=>setForm({...form,eligibleBranches:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Creating…':'Create drive'}</button></form></Panel>
-  <Panel title="Drive directory" meta="Published placement opportunities"><DataTable cols={['company','jobRole','packageLpa','minimumCgpa','deadline','eligibleBranches']} rows={rows.map(d=>({...d,company:d.company?.name||'—'}))}/></Panel>
+  <Panel title="New placement drive"><form className="form-grid" onSubmit={save}><label>Company<select required value={form.companyId} onChange={e=>setForm({...form,companyId:e.target.value})}><option value="">Select company</option>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Job role<input required value={form.jobRole} onChange={e=>setForm({...form,jobRole:e.target.value})}/></label><label>Package (LPA)<input required type="number" step="0.1" value={form.packageLpa} onChange={e=>setForm({...form,packageLpa:e.target.value})}/></label><label>Minimum CGPA<input required type="number" step="0.1" value={form.minimumCgpa} onChange={e=>setForm({...form,minimumCgpa:e.target.value})}/></label><label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label><label>Eligible branches<input value={form.eligibleBranches} onChange={e=>setForm({...form,eligibleBranches:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Creating…':'Create drive'}</button></form></Panel>  <Panel title="Drive directory" meta="Published placement opportunities"><DataTable cols={['company','jobRole','packageLpa','minimumCgpa','deadline','eligibleBranches']} rows={rows.map(d=>({...d,company:d.company?.name||'—'}))}/></Panel>
  </Page>
 }
 function AdminUsers(){
@@ -285,7 +315,7 @@ export default function App(){
 
     {r === 'STUDENT' && <>
       <Route path="/" element={protectedPage(<StudentDashboard/>)}/>
-      <Route path="/profile" element={protectedPage(<Profile/>)}/><Route path="/timetable" element={protectedPage(<Timetable/>)}/><Route path="/subjects" element={protectedPage(<Subjects/>)}/>
+      <Route path="/profile" element={protectedPage(<Profile/>)}/><Route path="/timetable" element={protectedPage(<Timetable/>)}/><Route path="/subjects" element={protectedPage(<Subjects/>)}/><Route path="/performance" element={protectedPage(<Performance/>)}/>
       <Route path="/attendance" element={protectedPage(<Attendance/>)}/>
       <Route path="/marks" element={protectedPage(<Marks/>)}/>
       <Route path="/assignments" element={protectedPage(<Assignments/>)}/>
