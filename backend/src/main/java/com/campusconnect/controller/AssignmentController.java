@@ -21,7 +21,18 @@ public class AssignmentController {
         this.assignments=assignments;this.submissions=submissions;this.students=students;this.users=users;
     }
 
-    @GetMapping public Object all(){return assignments.findAll();}
+    @GetMapping
+    @PreAuthorize("hasRole('STUDENT')")
+    public Object all(){
+        return assignments.findAll().stream().map(x -> Map.of(
+            "id",x.getId(),
+            "title",x.getTitle(),
+            "description",x.getDescription(),
+            "subject",x.getSubject().getName(),
+            "subjectCode",x.getSubject().getCode(),
+            "deadline",x.getDeadline()
+        )).toList();
+    }
 
     @GetMapping("/student-submissions")
     @PreAuthorize("hasRole('STUDENT')")
