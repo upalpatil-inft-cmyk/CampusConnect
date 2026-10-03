@@ -16,12 +16,31 @@ public class DataSeeder {
                                  PlacementDriveRepository drives,AttendanceRepository attendance,MarkRepository marks,
                                  AssignmentRepository assignments,NoticeRepository notices,PasswordEncoder encoder) {
         return args -> {
+            String demoAdminPassword = System.getenv("DEMO_ADMIN_PASSWORD");
+            String demoFacultyPassword = System.getenv("DEMO_FACULTY_PASSWORD");
+            String demoStudentPassword = System.getenv("DEMO_STUDENT_PASSWORD");
+
+            if (demoFacultyPassword != null && !demoFacultyPassword.isBlank()) {
+                users.findByEmail("faculty@campusconnect.local").ifPresent(user -> {
+                    user.setPassword(encoder.encode(demoFacultyPassword));
+                    user.setActive(true);
+                    users.save(user);
+                });
+            }
+
             if(users.count()>0) return;
 
+            if (demoAdminPassword == null || demoAdminPassword.isBlank()
+                    || demoFacultyPassword == null || demoFacultyPassword.isBlank()
+                    || demoStudentPassword == null || demoStudentPassword.isBlank()) {
+                throw new IllegalStateException(
+                        "DEMO_ADMIN_PASSWORD, DEMO_FACULTY_PASSWORD and DEMO_STUDENT_PASSWORD must be configured before creating demo accounts");
+            }
+
             var cs=departments.save(new Department("Computer Science","CS"));
-            var admin=users.save(new User("admin@campusconnect.local",encoder.encode("Admin@123"),Role.ADMIN,"Campus Admin"));
-            var fuser=users.save(new User("faculty@campusconnect.local",encoder.encode("Faculty@123"),Role.FACULTY,"Priya Sharma"));
-            var suser=users.save(new User("student@campusconnect.local",encoder.encode("CampusConnect!7Qv#29Lm"),Role.STUDENT,"Upal Patil"));
+            var admin=users.save(new User("admin@campusconnect.local",encoder.encode(demoAdminPassword),Role.ADMIN,"Campus Admin"));
+            var fuser=users.save(new User("faculty@campusconnect.local",encoder.encode(demoFacultyPassword),Role.FACULTY,"Priya Sharma"));
+            var suser=users.save(new User("student@campusconnect.local",encoder.encode(demoStudentPassword),Role.STUDENT,"Upal Patil"));
 
             var f=faculty.save(new Faculty(fuser,cs,"FAC001"));
             var s=students.save(new Student(suser,cs,"127",5,8.4));
