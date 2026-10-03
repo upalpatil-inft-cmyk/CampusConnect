@@ -21,15 +21,30 @@ public class FacultyController {
         this.users=users;this.faculty=faculty;this.students=students;this.subjects=subjects;this.attendance=attendance;this.marks=marks;this.assignments=assignments;
     }
 
+    private Faculty currentFaculty(Authentication a) {
+        return faculty.findByUser(users.findByEmail(a.getName()).orElseThrow()).orElseThrow();
+    }
+
+    private void verifyScope(Faculty f, Student s, Subject sub) {
+        if (!s.getDepartment().getId().equals(f.getDepartment().getId())
+                || !sub.getDepartment().getId().equals(f.getDepartment().getId())) {
+            throw new IllegalArgumentException("You can only manage records within your department.");
+        }
+    }
+
     @PostMapping("/attendance")
-    public Object markAttendance(@Valid @RequestBody AttendanceRequest r){
+    public Object markAttendance(Authentication a,@Valid @RequestBody AttendanceRequest r){
+        var f=currentFaculty(a);
         var s=students.findById(r.studentId()).orElseThrow(); var sub=subjects.findById(r.subjectId()).orElseThrow();
+        verifyScope(f,s,sub);
         return attendance.save(new Attendance(s,sub,r.date(),r.present()));
     }
 
     @PostMapping("/marks")
-    public Object addMark(@Valid @RequestBody MarkRequest r){
+    public Object addMark(Authentication a,@Valid @RequestBody MarkRequest r){
+        var f=currentFaculty(a);
         var s=students.findById(r.studentId()).orElseThrow(); var sub=subjects.findById(r.subjectId()).orElseThrow();
+        verifyScope(f,s,sub);
         return marks.save(new Mark(s,sub,r.internalMarks(),r.totalMarks()));
     }
 
@@ -37,6 +52,9 @@ public class FacultyController {
     public Object createAssignment(Authentication a,@Valid @RequestBody AssignmentRequest r){
         var f=faculty.findByUser(users.findByEmail(a.getName()).orElseThrow()).orElseThrow();
         var sub=subjects.findById(r.subjectId()).orElseThrow();
+        if (!sub.getDepartment().getId().equals(f.getDepartment().getId())) {
+            throw new IllegalArgumentException("You can only publish assignments for your department.");
+        }
         return assignments.save(new Assignment(r.title(),r.description(),sub,f,r.deadline()));
     }
 }
