@@ -122,3 +122,37 @@
   .topnav a svg,.nav-dropdown-trigger svg:first-child{width:17px;height:17px}
   .nav-dropdown-trigger svg:last-child{display:none}
 }
+
+/* Student dashboard refresh */
+.dashboard-hero{display:flex;justify-content:space-between;gap:28px;align-items:stretch;margin-bottom:16px;padding:28px;border:1px solid rgba(255,255,255,.86);border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.82),rgba(239,243,237,.72));box-shadow:0 18px 45px rgba(38,44,39,.06)}
+.dashboard-hero>div:first-child{max-width:560px}
+.dashboard-hero h2{margin:7px 0 8px;font:600 27px/1.1 "Space Grotesk";letter-spacing:-.045em}
+.dashboard-hero p{margin:0;color:var(--muted);font-size:12px;line-height:1.6}
+.hero-metrics{display:flex;align-items:center;gap:9px}
+.hero-metrics div{min-width:90px;padding:13px 15px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.64)}
+.hero-metrics strong{display:block;font:700 23px "Space Grotesk";letter-spacing:-.04em}
+.hero-metrics span{display:block;margin-top:3px;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.08em}
+.dashboard-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:16px}
+.dashboard-grid{display:grid;grid-template-columns:1.35fr .85fr;gap:16px}
+.dashboard-grid>.panel:first-child{grid-row:span 2}
+.placement-pulse{display:flex;gap:13px;align-items:center;padding:10px 0 17px}
+.pulse-icon{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:#e2f0e9;color:var(--green);flex:none}
+.placement-pulse strong{font:600 17px "Space Grotesk";letter-spacing:-.03em}
+.placement-pulse p{margin:4px 0 0;color:var(--muted);font-size:10px;line-height:1.5}
+.panel-link{display:inline-flex;align-items:center;gap:6px;margin-top:9px;color:var(--green);font-size:10px;font-weight:700}
+.panel-link:hover{text-decoration:underline}
+@media(max-width:900px){
+ .dashboard-hero{flex-direction:column}
+ .hero-metrics{width:100%}
+ .hero-metrics div{flex:1}
+ .dashboard-stats{grid-template-columns:repeat(2,1fr)}
+ .dashboard-grid{grid-template-columns:1fr}
+ .dashboard-grid>.panel:first-child{grid-row:auto}
+}
+@media(max-width:560px){
+ .hero-metrics{display:grid;grid-template-columns:repeat(3,1fr)}
+ .hero-metrics div{min-width:0;padding:11px}
+ .hero-metrics strong{font-size:18px}
+ .dashboard-stats{grid-template-columns:1fr}
+ .dashboard-hero{padding:21px}
+}
