@@ -315,13 +315,13 @@ function Assignments(){
    return filter==='ALL'||status===filter;
  });
  async function submit(id){
-   if(!file)return alert('Choose a file first.');
+   if(!file){setMessage({type:'error',text:'Choose a file before submitting.'});return;}
    setBusy(true);
    try{
      const form=new FormData(); form.append('assignmentId',id); form.append('file',file);
      await api.post('/assignments/submit-file',form);
      setFile(null); await load();
-   }catch(e){alert(e.response?.data?.message||'Unable to submit assignment')}finally{setBusy(false)}
+   }catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to submit assignment'})}finally{setBusy(false)}
  }
  function due(deadline){if(deadline<today)return 'Overdue'; const days=Math.ceil((new Date(deadline)-new Date(today))/86400000); return days===0?'Due today':`Due in ${days}d`}
  return <Page title="Assignments" subtitle="Tasks published by your faculty, with submission status and feedback.">
@@ -345,7 +345,7 @@ function Placements(){
  useEffect(()=>{load()},[]);
  async function apply(id){
    try{await api.post(`/placements/drives/${id}/apply`);load()}
-   catch(e){alert(e.response?.data?.message||'Unable to apply')}
+   catch(e){setApplyMessage({type:'error',text:e.response?.data?.message||'Unable to apply'})}
  }
  const visible=rows.filter(d=>filter==='ALL'||(filter==='ELIGIBLE'&&d.eligible)||(filter==='APPLIED'&&d.applicationStatus));
  return <Page title="Placements" subtitle="Compare opportunities, understand eligibility, and track every application.">
@@ -430,7 +430,7 @@ function FacultyAssignments(){
  </Page>
 }
 
-function FacultySubmissions(){const[rows,setRows]=useState([]);const[busy,setBusy]=useState(null);async function load(){const r=await api.get('/faculty/submissions');setRows(r.data)}useEffect(()=>{load()},[]);async function grade(id){const marks=prompt('Marks (0-100):');if(marks===null)return;const feedback=prompt('Feedback:')||'';setBusy(id);try{await api.patch(`/faculty/submissions/${id}/grade`,{marks,feedback});await load()}catch(e){alert(e.response?.data?.message||'Unable to grade submission')}finally{setBusy(null)}}return <Page title="Review submissions" subtitle="Grade student work and leave concise feedback."><div className="assignment-list">{rows.map(s=><article className="assignment-item" key={s.id}><div><span className="label">{s.assignment}</span><h3>{s.student}</h3><p>{s.fileName}</p><small>Submitted · {s.submittedAt}</small></div><div className="assignment-action"><span className="status-ok">{s.marks==='—'?'Not graded':`Marks: ${s.marks}`}</span><button className="primary" disabled={busy===s.id} onClick={()=>grade(s.id)}>{busy===s.id?'Saving…':'Grade'}</button></div></article>)}{!rows.length&&<div className="panel empty">No submissions yet.</div>}</div></Page>}
+function FacultySubmissions(){const[rows,setRows]=useState([]);const[busy,setBusy]=useState(null);const[message,setMessage]=useState(null);async function load(){const r=await api.get('/faculty/submissions');setRows(r.data)}useEffect(()=>{load()},[]);async function grade(id){const marks=prompt('Marks (0-100):');if(marks===null)return;const feedback=prompt('Feedback:')||'';setBusy(id);try{await api.patch(`/faculty/submissions/${id}/grade`,{marks,feedback});await load()}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to grade submission'})}finally{setBusy(null)}}return <Page title="Review submissions" subtitle="Grade student work and leave concise feedback."><div className="assignment-list">{rows.map(s=><article className="assignment-item" key={s.id}><div><span className="label">{s.assignment}</span><h3>{s.student}</h3><p>{s.fileName}</p><small>Submitted · {s.submittedAt}</small></div><div className="assignment-action"><span className="status-ok">{s.marks==='—'?'Not graded':`Marks: ${s.marks}`}</span><button className="primary" disabled={busy===s.id} onClick={()=>grade(s.id)}>{busy===s.id?'Saving…':'Grade'}</button></div></article>)}{!rows.length&&<div className="panel empty">No submissions yet.</div>}</div></Page>}
 function AdminDashboard(){
  const[stats,setStats]=useState(null);
  useEffect(()=>{api.get('/admin/overview').then(r=>setStats(r.data)).catch(()=>setStats(null))},[]);
@@ -470,7 +470,7 @@ function AdminUsers(){
  const[rows,setRows]=useState([]),[busy,setBusy]=useState(null);
  async function load(){const r=await api.get('/admin/users');setRows(r.data)}
  useEffect(()=>{load()},[]);
- async function toggle(id,active){setBusy(id);try{await api.patch('/admin/users/'+id+'/active',{active:!active});await load()}catch(e){alert(e.response?.data?.message||'Unable to update user')}finally{setBusy(null)}}
+ async function toggle(id,active){setBusy(id);try{await api.patch('/admin/users/'+id+'/active',{active:!active});await load()}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to update user'})}finally{setBusy(null)}}
  return <Page title="User management" subtitle="Review account roles and control access to the portal.">
   <Panel title="User directory" meta="Account status and role overview">
    <div className="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Access</th></tr></thead><tbody>{rows.map(u=><tr key={u.id}><td><b>{u.name}</b></td><td>{u.email}</td><td><span className="label">{u.role}</span></td><td><span className={u.active?'status-ok':'status-bad'}>{u.active?'Active':'Inactive'}</span></td><td><button className={u.active?'secondary-btn':'primary'} disabled={busy===u.id} onClick={()=>toggle(u.id,u.active)}>{busy===u.id?'Updating…':u.active?'Deactivate':'Activate'}</button></td></tr>)}</tbody></table></div>
@@ -486,7 +486,7 @@ function AdminApplications(){
  async function changeStatus(id,status){
    setBusy(id);
    try{await api.patch(`/placement-upgrades/admin/applications/${id}/status`,{status});await load()}
-   catch(e){alert(e.response?.data?.message||'Unable to update status')}
+   catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to update status'})}
    finally{setBusy(null)}
  }
  return <Page title="Applications" subtitle="Review and update placement application progress.">
