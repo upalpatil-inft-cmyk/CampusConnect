@@ -326,7 +326,7 @@ function Assignments(){
  function due(deadline){if(deadline<today)return 'Overdue'; const days=Math.ceil((new Date(deadline)-new Date(today))/86400000); return days===0?'Due today':`Due in ${days}d`}
  return <Page title="Assignments" subtitle="Tasks published by your faculty, with submission status and feedback.">
   <div className="day-tabs assignment-filters">{['ALL','PENDING','SUBMITTED','OVERDUE'].map(x=><button key={x} className={filter===x?'active':''} onClick={()=>setFilter(x)}>{x[0]+x.slice(1).toLowerCase()}</button>)}</div>
-  <div className="assignment-list">{visible.map(a=>{
+  {!visible.length?<EmptyState icon={FileText} title={filter==='ALL'?'No assignments yet':`No ${filter.toLowerCase()} assignments`} message={filter==='ALL'?'Your faculty assignments will appear here.':'Try another filter to see other assignment states.'}/>:<div className="assignment-list">{visible.map(a=>{
     const s=submitted.get(a.id); const status=s?'SUBMITTED':(a.deadline<today?'OVERDUE':'PENDING');
     return <article className="assignment-item" key={a.id}>
       <div><span className="label">{a.subject?.code||'ASSIGNMENT'}</span><h3>{a.title}</h3><p>{a.description}</p><small>Deadline · {a.deadline||'Not set'} · <b>{due(a.deadline)}</b></small>{s&&<div className="submission-note"><CheckCircle2 size={14}/> {s.fileName} · {s.marks==='—'?'Awaiting grade':`Marks: ${s.marks}`}{s.feedback!=='—'&&` · ${s.feedback}`}</div>}</div>
@@ -356,7 +356,7 @@ function Placements(){
      <Stat label="SELECTED" value={stats?.selected??'—'} note="Placement history" accent="cream" icon={CheckCircle2}/>
    </div>
    <div className="day-tabs placement-filters">{['ALL','ELIGIBLE','APPLIED'].map(x=><button key={x} className={filter===x?'active':''} onClick={()=>setFilter(x)}>{x[0]+x.slice(1).toLowerCase()}</button>)}</div>
-   <div className="cards">{visible.map(d=><article className="op-card placement-card" key={d.id}>
+   {!visible.length?<EmptyState icon={BriefcaseBusiness} title={filter==='ALL'?'No placement drives yet':`No ${filter.toLowerCase()} opportunities`} message="New campus opportunities will appear here when they are published."/>:<div className="cards">{visible.map(d=><article className="op-card placement-card" key={d.id}>
      <div className="placement-company"><span className="label">COMPANY</span><h3>{d.company}</h3></div>
      <p>{d.jobRole}</p><strong>₹{d.packageLpa} LPA</strong>
      <div className="eligibility-box"><b>Eligibility</b><span className={d.cgpaEligible?'ok':'bad'}>{d.cgpaEligible?'✓':'×'} CGPA {d.minimumCgpa}</span><span className={d.branchEligible?'ok':'bad'}>{d.branchEligible?'✓':'×'} {d.eligibleBranches||'All branches'}</span></div>
@@ -503,9 +503,10 @@ function Timetable(){
  useEffect(()=>{api.get('/student/timetable').then(r=>setRows(r.data)).catch(()=>setRows([]))},[]);
  const days=['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
  const visible=day==='ALL'?rows:rows.filter(x=>x.day===day);
+ const emptyTitle=day==='ALL'?'No timetable entries yet':`No classes on ${day[0]+day.slice(1).toLowerCase()}`;
  return <Page title="My timetable" subtitle="Your weekly class schedule, synced from the campus portal." action={<div className="semester">Semester 5 <i>•</i> Weekly view</div>}>
    <div className="day-tabs"><button className={day==='ALL'?'active':''} onClick={()=>setDay('ALL')}>All</button>{days.map(d=><button key={d} className={day===d?'active':''} onClick={()=>setDay(d)}>{d.slice(0,3)}</button>)}</div>
-   <div className="timetable-grid">{visible.map(x=><article className="class-card" key={x.id}>
+   {!visible.length?<EmptyState icon={CalendarDays} title={emptyTitle} message="Your class schedule will appear here once it is published."/>:<div className="timetable-grid">{visible.map(x=><article className="class-card" key={x.id}>
       <div className="class-time"><Clock3 size={15}/><b>{x.startTime.slice(0,5)} – {x.endTime.slice(0,5)}</b><span>{x.day}</span></div>
       <div className="class-main"><span className="label">{x.code}</span><h3>{x.subject}</h3><p>{x.faculty}</p></div>
       <div className="class-room"><MapPin size={14}/>{x.room}</div>
@@ -521,7 +522,9 @@ function Subjects(){
  </Page>
 }
 
-function DataTable({cols,rows}){if(!rows?.length)return <div className="panel empty">No records yet.</div>;return <div className="table-wrap"><table><thead><tr>{cols.map(c=><th key={c}>{c.replace(/([A-Z])/g,' $1')}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={r.id||i}>{cols.map(c=><td key={c}>{typeof r[c]==='object'?JSON.stringify(r[c]):String(r[c]??'—')}</td>)}</tr>)}</tbody></table></div>}
+function EmptyState({icon:Icon=Inbox,title="Nothing here yet",message="There are no records to show right now."}){return <div className="empty-state"><span className="empty-icon"><Icon size={18}/></span><div><b>{title}</b><p>{message}</p></div></div>}
+
+function DataTable({cols,rows,emptyTitle="Nothing here yet",emptyMessage="There are no records to show right now."}){if(!rows?.length)return <EmptyState title={emptyTitle} message={emptyMessage}/>;return <div className="table-wrap"><table><thead><tr>{cols.map(c=><th key={c}>{c.replace(/([A-Z])/g,' $1')}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={r.id||i}>{cols.map(c=><td key={c}>{typeof r[c]==='object'?JSON.stringify(r[c]):String(r[c]??'—')}</td>)}</tr>)}</tbody></table></div>}
 
 export default function App(){
   const r=role();
