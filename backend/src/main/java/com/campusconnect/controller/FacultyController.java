@@ -3,6 +3,7 @@ package com.campusconnect.controller;
 import com.campusconnect.dto.*;
 import com.campusconnect.entity.*;
 import com.campusconnect.repository.*;
+import com.campusconnect.service.NotificationService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -15,11 +16,13 @@ import java.util.Map;
 public class FacultyController {
     private final UserRepository users; private final FacultyRepository faculty; private final StudentRepository students;
     private final SubjectRepository subjects; private final AttendanceRepository attendance; private final MarkRepository marks;
-    private final AssignmentRepository assignments;
+    private final AssignmentRepository assignments; private final NotificationService notificationService;
 
     public FacultyController(UserRepository users,FacultyRepository faculty,StudentRepository students,SubjectRepository subjects,
-                             AttendanceRepository attendance,MarkRepository marks,AssignmentRepository assignments){
-        this.users=users;this.faculty=faculty;this.students=students;this.subjects=subjects;this.attendance=attendance;this.marks=marks;this.assignments=assignments;
+                             AttendanceRepository attendance,MarkRepository marks,AssignmentRepository assignments,
+                             NotificationService notificationService){
+        this.users=users;this.faculty=faculty;this.students=students;this.subjects=subjects;this.attendance=attendance;this.marks=marks;
+        this.assignments=assignments;this.notificationService=notificationService;
     }
 
     private Faculty currentFaculty(Authentication a) {
@@ -55,11 +58,19 @@ public class FacultyController {
 
     @PostMapping("/assignments")
     public Object createAssignment(Authentication a,@Valid @RequestBody AssignmentRequest r){
-        var f=faculty.findByUser(users.findByEmail(a.getName()).orElseThrow()).orElseThrow();
+        var f=currentFaculty(a);
         var sub=subjects.findById(r.subjectId()).orElseThrow();
         if (!sub.getDepartment().getId().equals(f.getDepartment().getId())) {
             throw new IllegalArgumentException("You can only publish assignments for your department.");
         }
-        return assignments.save(new Assignment(r.title(),r.description(),sub,f,r.deadline()));
+        var saved=assignments.save(new Assignment(r.title(),r.description(),sub,f,r.deadline()));
+        notificationService.createForStudents(
+            NotificationType.ASSIGNMENT,
+            "New assignment posted",
+            saved.getTitle()+" · due "+saved.getDeadline(),
+            "/assignments",
+            "ASSIGNMENT:"+saved.getId()
+        );
+        return saved;
     }
 }
