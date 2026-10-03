@@ -10,16 +10,19 @@ function Protected({ children }) { return localStorage.getItem('campusconnect_to
 
 function Login() {
   const nav = useNavigate();
-  const [email,setEmail]=useState('');
-  const [password,setPassword]=useState('');
-  const [error,setError]=useState(''); const [busy,setBusy]=useState(false);
+  const [email,setEmail] = useState('');
+  const [password,setPassword] = useState('');
+  const [error,setError] = useState('');
+  const [busy,setBusy] = useState(false);
+
   async function submit(e){
     e.preventDefault();
     setBusy(true);
     setError('');
     try{
       localStorage.clear();
-      await login(email.trim(), password);
+      const data = await login(email.trim(), password);
+      localStorage.setItem('campusconnect_email', email.trim());
       nav('/', {replace:true});
       window.setTimeout(() => window.location.reload(), 0);
     }catch{
@@ -28,6 +31,49 @@ function Login() {
       setBusy(false);
     }
   }
+
+  return <div className="login-page">
+    <div className="login-orb orb-one"/>
+    <div className="login-orb orb-two"/>
+    <section className="login-card">
+      <div className="brand-mark">C</div>
+      <p className="eyebrow">CAMPUSCONNECT</p>
+      <h1>Welcome back.</h1>
+      <p className="login-copy">Sign in to access your college portal.</p>
+      <form onSubmit={submit}>
+        <label>
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={e=>setEmail(e.target.value)}
+            placeholder="you@campusconnect.local"
+            autoComplete="username"
+            required
+          />
+        </label>
+        <label>
+          Password
+          <input
+            type="password"
+            value={password}
+            onChange={e=>setPassword(e.target.value)}
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            required
+          />
+        </label>
+        {error && <div className="error">{error}</div>}
+        <button className="primary wide" type="submit" disabled={busy}>
+          {busy ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+      <div className="demo-box">
+        <b>CampusConnect Portal</b>
+        Use your assigned student, faculty, or admin account.
+      </div>
+    </section>
+  </div>;
 }
 
 function Shell({children}){
