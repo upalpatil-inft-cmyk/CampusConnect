@@ -51,7 +51,8 @@ public class FacultyController {
         var f=currentFaculty(a);
         var s=students.findById(r.studentId()).orElseThrow(); var sub=subjects.findById(r.subjectId()).orElseThrow();
         verifyScope(f,s,sub);
-        var saved=marks.save(new Mark(s,sub,r.internalMarks(),r.totalMarks()));
+        var saved=marks.findByStudentAndSubject(s,sub);
+        if(saved==null) saved=new Mark(s,sub,r.internalMarks(),r.totalMarks()); else saved.update(r.internalMarks(),r.totalMarks());\n        saved=marks.save(saved);
         return Map.of("id",saved.getId(),"studentId",s.getId(),"student",s.getUser().getFullName(),
                 "subject",sub.getName(),"internalMarks",saved.getInternalMarks(),"totalMarks",saved.getTotalMarks());
     }
