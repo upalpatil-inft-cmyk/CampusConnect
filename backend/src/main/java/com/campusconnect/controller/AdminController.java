@@ -22,5 +22,15 @@ public class AdminController {
         return drives.save(new PlacementDrive(c,r.jobRole(),r.packageLpa(),r.minimumCgpa(),r.deadline(),r.eligibleBranches()));
     }
     @GetMapping("/drives") public Object drives(){return drives.findAll();}
-    @GetMapping("/applications") public Object applications(){return applications.findAll();}
+    @GetMapping("/applications") public Object applications(){
+        return applications.findAll().stream().map(a -> java.util.Map.of(
+            "id",a.getId(),
+            "company",a.getPlacementDrive().getCompany().getName(),
+            "role",a.getPlacementDrive().getJobRole(),
+            "student",a.getStudent().getUser().getFullName(),
+            "studentEmail",a.getStudent().getUser().getEmail(),
+            "status",a.getStatus().name(),
+            "appliedAt",a.getAppliedAt()
+        )).toList();
+    }
 }
