@@ -1,7 +1,8 @@
 package com.campusconnect.controller;
 
-import com.campusconnect.entity.ApplicationStatus;
+import com.campusconnect.entity.*;
 import com.campusconnect.repository.*;
+import com.campusconnect.service.NotificationService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -16,13 +17,15 @@ public class PlacementUpgradeController {
     private final ApplicationRepository applications;
     private final StudentRepository students;
     private final UserRepository users;
+    private final NotificationService notificationService;
 
     public PlacementUpgradeController(PlacementDriveRepository drives, ApplicationRepository applications,
-                                      StudentRepository students, UserRepository users) {
+                                      StudentRepository students, UserRepository users, NotificationService notificationService) {
         this.drives = drives;
         this.applications = applications;
         this.students = students;
         this.users = users;
+        this.notificationService=notificationService;
     }
 
     @GetMapping("/student")
@@ -100,6 +103,14 @@ public class PlacementUpgradeController {
         var status = ApplicationStatus.valueOf(raw.toUpperCase(Locale.ROOT));
         app.setStatus(status);
         var saved = applications.save(app);
+        notificationService.create(
+            saved.getStudent().getUser(),
+            NotificationType.PLACEMENT,
+            "Placement application updated",
+            saved.getPlacementDrive().getCompany().getName()+" · "+saved.getPlacementDrive().getJobRole()+" is now "+saved.getStatus().name()+".",
+            "/placements",
+            "PLACEMENT:"+saved.getId()+":"+saved.getStatus().name()
+        );
         return Map.of(
             "id", saved.getId(),
             "status", saved.getStatus().name(),
