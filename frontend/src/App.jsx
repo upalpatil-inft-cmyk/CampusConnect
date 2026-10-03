@@ -1,6 +1,6 @@
 import React from 'react'
 import { useEffect, useMemo, useState } from 'react';
-import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
+import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, BriefcaseBusiness, CalendarDays, Clock3, MapPin, CheckCircle2, ClipboardCheck, FileText, GraduationCap, LayoutDashboard, LogOut, UserRound, Users, Building2, UserCheck, ArrowUpRight, BookOpen, CircleAlert, TrendingUp, ChevronDown } from 'lucide-react';
 import { api, login } from './api';
 
@@ -78,6 +78,7 @@ function Login() {
 
 function Shell({children}){
   const nav=useNavigate();
+  const location=useLocation();
   const r=role();
   const name=localStorage.getItem('campusconnect_name')||'User';
   const email=localStorage.getItem('campusconnect_email')||(
@@ -87,15 +88,44 @@ function Shell({children}){
   const [notices,setNotices]=useState([]);
   const [noticeOpen,setNoticeOpen]=useState(false);
   const [profileOpen,setProfileOpen]=useState(false);
+  const [academicOpen,setAcademicOpen]=useState(false);
 
   useEffect(()=>{
     api.get('/notices').then(res=>setNotices(Array.isArray(res.data)?res.data.slice(-5).reverse():[])).catch(()=>setNotices([]));
   },[]);
 
-  const student=[['/','Overview',LayoutDashboard],['/profile','Profile',UserRound],['/timetable','Timetable',CalendarDays],['/subjects','Subjects',BookOpen],['/performance','Performance',TrendingUp],['/attendance','Attendance',ClipboardCheck],['/marks','Marks',GraduationCap],['/assignments','Assignments',FileText],['/placements','Placements',BriefcaseBusiness]];
-  const faculty=[['/','Overview',LayoutDashboard],['/faculty/attendance','Attendance',ClipboardCheck],['/faculty/marks','Marks',GraduationCap],['/faculty/assignments','Assignments',FileText],['/faculty/submissions','Review',CheckCircle2]];
-  const admin=[['/','Overview',LayoutDashboard],['/admin/users','Users',UserCheck],['/admin/companies','Companies',Building2],['/admin/drives','Placement Drives',BriefcaseBusiness],['/admin/applications','Applications',Users]];
-  const links=r==='STUDENT'?student:r==='FACULTY'?faculty:admin;
+  const studentAcademic=[
+    ['/timetable','Timetable',CalendarDays],
+    ['/subjects','Subjects',BookOpen],
+    ['/performance','Performance',TrendingUp],
+    ['/attendance','Attendance',ClipboardCheck],
+    ['/marks','Marks',GraduationCap],
+    ['/assignments','Assignments',FileText]
+  ];
+  const facultyAcademic=[
+    ['/faculty/attendance','Attendance',ClipboardCheck],
+    ['/faculty/marks','Marks',GraduationCap],
+    ['/faculty/assignments','Assignments',FileText]
+  ];
+  const adminManagement=[
+    ['/admin/users','Users',UserCheck],
+    ['/admin/companies','Companies',Building2],
+    ['/admin/drives','Placement Drives',BriefcaseBusiness]
+  ];
+
+  const studentTop=[['/','Overview',LayoutDashboard],['/placements','Placements',BriefcaseBusiness]];
+  const facultyTop=[['/','Overview',LayoutDashboard],['/faculty/submissions','Review',CheckCircle2]];
+  const adminTop=[['/','Overview',LayoutDashboard],['/admin/applications','Applications',Users]];
+  const topLinks=r==='STUDENT'?studentTop:r==='FACULTY'?facultyTop:adminTop;
+  const grouped=r==='STUDENT'?studentAcademic:r==='FACULTY'?facultyAcademic:adminManagement;
+  const groupLabel=r==='ADMIN'?'Management':'Academics';
+  const groupActive=grouped.some(([to])=>location.pathname===to);
+
+  function closeMenus(){
+    setNoticeOpen(false);
+    setProfileOpen(false);
+    setAcademicOpen(false);
+  }
 
   function logout(){
     localStorage.clear();
@@ -115,16 +145,30 @@ function Shell({children}){
       </div>
 
       <nav className="topnav">
-        {links.map(([to,label,Icon])=><NavLink key={to} to={to} end={to==='/'}
-          onClick={()=>{setNoticeOpen(false);setProfileOpen(false)}}>
+        {topLinks.map(([to,label,Icon])=><NavLink key={to} to={to} end={to==='/'}
+          onClick={closeMenus}>
           <Icon size={15}/>{label}
         </NavLink>)}
+
+        <div className="nav-dropdown-wrap">
+          <button className={`nav-dropdown-trigger${groupActive?' active':''}`}
+            onClick={()=>{setAcademicOpen(v=>!v);setNoticeOpen(false);setProfileOpen(false)}}>
+            <BookOpen size={15}/>{groupLabel}<ChevronDown size={13} className={academicOpen?'chevron-open':''}/>
+          </button>
+          {academicOpen&&<div className="nav-dropdown">
+            <div className="nav-dropdown-title">{groupLabel}</div>
+            {grouped.map(([to,label,Icon])=><NavLink key={to} to={to} end
+              onClick={closeMenus}>
+              <Icon size={15}/><span>{label}</span>
+            </NavLink>)}
+          </div>}
+        </div>
       </nav>
 
       <div className="top-actions">
         <div className="notification-wrap">
           <button className="icon-btn" title="Notifications"
-            onClick={()=>{setNoticeOpen(v=>!v);setProfileOpen(false)}}>
+            onClick={()=>{setNoticeOpen(v=>!v);setProfileOpen(false);setAcademicOpen(false)}}>
             <Bell size={17}/>
             {notices.length>0&&<span className="notification-dot"/>}
           </button>
@@ -145,7 +189,7 @@ function Shell({children}){
 
         <div className="profile-wrap">
           <button className="user-chip profile-trigger"
-            onClick={()=>{setProfileOpen(v=>!v);setNoticeOpen(false)}}>
+            onClick={()=>{setProfileOpen(v=>!v);setNoticeOpen(false);setAcademicOpen(false)}}>
             <div className="avatar">{name[0]}</div>
             <div><b>{name}</b><small>{r}</small></div>
             <ChevronDown size={14} className={profileOpen?'chevron-open':''}/>
@@ -165,6 +209,7 @@ function Shell({children}){
     <main className="content">{children}</main>
   </div>
 }
+
 function Page({eyebrow='CAMPUSCONNECT',title,subtitle,action,children}){return <><div className="page-head"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1>{subtitle&&<p className="subtitle">{subtitle}</p>}</div>{action}</div>{children}</>}
 function Panel({title,meta,children,className=''}){return <section className={'panel '+className}><div className="panel-head"><div><h2>{title}</h2>{meta&&<p>{meta}</p>}</div></div>{children}</section>}
 function Stat({label,value,note,accent='green',icon:Icon}){return <article className="stat-card"><div className="stat-top"><span className="label">{label}</span>{Icon&&<span className={'stat-icon '+accent}><Icon size={16}/></span>}</div><strong>{value}</strong><small>{note}</small></article>}
