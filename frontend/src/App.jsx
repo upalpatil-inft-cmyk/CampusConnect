@@ -1,7 +1,7 @@
 import React from 'react'
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
-import { Bell, BriefcaseBusiness, CalendarDays, Clock3, MapPin, CheckCircle2, ClipboardCheck, FileText, GraduationCap, LayoutDashboard, LogOut, UserRound, Users, Building2, UserCheck, ArrowUpRight, BookOpen, CircleAlert, TrendingUp } from 'lucide-react';
+import { Bell, BriefcaseBusiness, CalendarDays, Clock3, MapPin, CheckCircle2, ClipboardCheck, FileText, GraduationCap, LayoutDashboard, LogOut, UserRound, Users, Building2, UserCheck, ArrowUpRight, BookOpen, CircleAlert, TrendingUp, ChevronDown } from 'lucide-react';
 import { api, login } from './api';
 
 const role = () => localStorage.getItem('campusconnect_role');
@@ -30,15 +30,94 @@ function Login() {
   }
 
 function Shell({children}){
-  const nav=useNavigate(); const r=role(); const name=localStorage.getItem('campusconnect_name')||'User';
+  const nav=useNavigate();
+  const r=role();
+  const name=localStorage.getItem('campusconnect_name')||'User';
+  const email=localStorage.getItem('campusconnect_email')||(
+    r==='FACULTY'?'faculty@campusconnect.local':
+    r==='ADMIN'?'admin@campusconnect.local':'student@campusconnect.local'
+  );
+  const [notices,setNotices]=useState([]);
+  const [noticeOpen,setNoticeOpen]=useState(false);
+  const [profileOpen,setProfileOpen]=useState(false);
+
+  useEffect(()=>{
+    api.get('/notices').then(res=>setNotices(Array.isArray(res.data)?res.data.slice(-5).reverse():[])).catch(()=>setNotices([]));
+  },[]);
+
   const student=[['/','Overview',LayoutDashboard],['/profile','Profile',UserRound],['/timetable','Timetable',CalendarDays],['/subjects','Subjects',BookOpen],['/performance','Performance',TrendingUp],['/attendance','Attendance',ClipboardCheck],['/marks','Marks',GraduationCap],['/assignments','Assignments',FileText],['/placements','Placements',BriefcaseBusiness]];
   const faculty=[['/','Overview',LayoutDashboard],['/faculty/attendance','Attendance',ClipboardCheck],['/faculty/marks','Marks',GraduationCap],['/faculty/assignments','Assignments',FileText],['/faculty/submissions','Review',CheckCircle2]];
   const admin=[['/','Overview',LayoutDashboard],['/admin/users','Users',UserCheck],['/admin/companies','Companies',Building2],['/admin/drives','Placement Drives',BriefcaseBusiness],['/admin/applications','Applications',Users]];
   const links=r==='STUDENT'?student:r==='FACULTY'?faculty:admin;
-  function logout(){localStorage.clear();nav('/login')}
-  return <div className="app-shell"><header className="topbar"><div className="brand"><span className="brand-mark">C</span><span><strong>CampusConnect</strong><small>College portal</small></span></div><nav className="topnav">{links.map(([to,label,Icon])=><NavLink key={to} to={to} end={to==='/' }><Icon size={15}/>{label}</NavLink>)}</nav><div className="top-actions"><button className="icon-btn" title="Notifications"><Bell size={17}/></button><div className="user-chip"><div className="avatar">{name[0]}</div><div><b>{name}</b><small>{r}</small></div></div><button className="logout-btn" onClick={logout}><LogOut size={15}/></button></div></header><main className="content">{children}</main></div>
-}
 
+  function logout(){
+    localStorage.clear();
+    nav('/login');
+  }
+
+  function goProfile(){
+    setProfileOpen(false);
+    if(r==='STUDENT') nav('/profile');
+  }
+
+  return <div className="app-shell">
+    <header className="topbar">
+      <div className="brand">
+        <span className="brand-mark">C</span>
+        <span><strong>CampusConnect</strong><small>College portal</small></span>
+      </div>
+
+      <nav className="topnav">
+        {links.map(([to,label,Icon])=><NavLink key={to} to={to} end={to==='/'}
+          onClick={()=>{setNoticeOpen(false);setProfileOpen(false)}}>
+          <Icon size={15}/>{label}
+        </NavLink>)}
+      </nav>
+
+      <div className="top-actions">
+        <div className="notification-wrap">
+          <button className="icon-btn" title="Notifications"
+            onClick={()=>{setNoticeOpen(v=>!v);setProfileOpen(false)}}>
+            <Bell size={17}/>
+            {notices.length>0&&<span className="notification-dot"/>}
+          </button>
+          {noticeOpen&&<div className="dropdown notifications-dropdown">
+            <div className="dropdown-head">
+              <div><b>Notifications</b><small>{notices.length ? 'Latest campus notices' : 'You are all caught up'}</small></div>
+              <Bell size={15}/>
+            </div>
+            <div className="notification-list">
+              {notices.length ? notices.map(n=><button className="notification-item" key={n.id}
+                onClick={()=>setNoticeOpen(false)}>
+                <span className="notification-bullet"/>
+                <span><b>{n.title}</b><small>{n.content}</small></span>
+              </button>) : <div className="dropdown-empty">No notifications right now.</div>}
+            </div>
+          </div>}
+        </div>
+
+        <div className="profile-wrap">
+          <button className="user-chip profile-trigger"
+            onClick={()=>{setProfileOpen(v=>!v);setNoticeOpen(false)}}>
+            <div className="avatar">{name[0]}</div>
+            <div><b>{name}</b><small>{r}</small></div>
+            <ChevronDown size={14} className={profileOpen?'chevron-open':''}/>
+          </button>
+          {profileOpen&&<div className="dropdown profile-dropdown">
+            <div className="profile-summary">
+              <div className="avatar large">{name[0]}</div>
+              <div><b>{name}</b><small>{email}</small><span>{r}</span></div>
+            </div>
+            {r==='STUDENT'&&<button className="dropdown-action" onClick={goProfile}><UserRound size={15}/>My profile</button>}
+            <button className="dropdown-action" onClick={()=>{setProfileOpen(false);nav('/')}}><LayoutDashboard size={15}/>Dashboard</button>
+            <button className="dropdown-action danger" onClick={logout}><LogOut size={15}/>Sign out</button>
+          </div>}
+        </div>
+      </div>
+    </header>
+    <main className="content">{children}</main>
+  </div>
+}
 function Page({eyebrow='CAMPUSCONNECT',title,subtitle,action,children}){return <><div className="page-head"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1>{subtitle&&<p className="subtitle">{subtitle}</p>}</div>{action}</div>{children}</>}
 function Panel({title,meta,children,className=''}){return <section className={'panel '+className}><div className="panel-head"><div><h2>{title}</h2>{meta&&<p>{meta}</p>}</div></div>{children}</section>}
 function Stat({label,value,note,accent='green',icon:Icon}){return <article className="stat-card"><div className="stat-top"><span className="label">{label}</span>{Icon&&<span className={'stat-icon '+accent}><Icon size={16}/></span>}</div><strong>{value}</strong><small>{note}</small></article>}
