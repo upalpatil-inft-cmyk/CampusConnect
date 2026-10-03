@@ -332,7 +332,7 @@ function Assignments(){
       <div><span className="label">{a.subject?.code||'ASSIGNMENT'}</span><h3>{a.title}</h3><p>{a.description}</p><small>Deadline · {a.deadline||'Not set'} · <b>{due(a.deadline)}</b></small>{s&&<div className="submission-note"><CheckCircle2 size={14}/> {s.fileName} · {s.marks==='—'?'Awaiting grade':`Marks: ${s.marks}`}{s.feedback!=='—'&&` · ${s.feedback}`}</div>}</div>
       <div className="assignment-action">{s?<span className="status-ok"><CheckCircle2 size={15}/> Submitted</span>:<><input key={file ? file.name : `empty-${a.id}`} id={`assignment-file-${a.id}`} type="file" onChange={e=>setFile(e.target.files?.[0]||null)}/><button className="primary" disabled={busy||status==='OVERDUE'} onClick={()=>submit(a.id)}>{busy?'Uploading…':'Submit file'}</button></>}</div>
     </article>
-  })}{!visible.length&&<div className="panel empty">No assignments match this filter.</div>}</div>
+  })}</div>}
   <Panel title="Submission history" meta="Grades and faculty feedback appear here."><DataTable cols={['assignment','fileName','submittedAt','marks','feedback']} rows={submissions}/></Panel>
  </Page>
 }
@@ -363,7 +363,6 @@ function Placements(){
      <small>Deadline · {d.deadline}</small>
      {d.applicationStatus?<div className="status-ok"><CheckCircle2 size={15}/> {d.applicationStatus}</div>:<button className="primary" disabled={!d.eligible} onClick={()=>apply(d.id)}>{d.eligible?'Apply now':'Not eligible'} <ArrowUpRight size={14}/></button>}
    </article>)}</div>
-   {!visible.length&&<div className="panel empty">No placement drives match this filter.</div>}
    <div className="profile-grid placement-bottom">
      <Panel title="My applications" meta="Current application status"><DataTable cols={['company','role','status']} rows={apps}/></Panel>
      <Panel title="Placement history" meta="Selected opportunities"><DataTable cols={['company','role','packageLpa','selectedAt']} rows={history}/></Panel>
