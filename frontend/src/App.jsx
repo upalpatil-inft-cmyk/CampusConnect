@@ -474,7 +474,7 @@ function AdminUsers(){
  return <Page title="User management" subtitle="Review account roles and control access to the portal.">
   <Panel title="User directory" meta="Account status and role overview">
    <div className="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Access</th></tr></thead><tbody>{rows.map(u=><tr key={u.id}><td><b>{u.name}</b></td><td>{u.email}</td><td><span className="label">{u.role}</span></td><td><span className={u.active?'status-ok':'status-bad'}>{u.active?'Active':'Inactive'}</span></td><td><button className={u.active?'secondary-btn':'primary'} disabled={busy===u.id} onClick={()=>toggle(u.id,u.active)}>{busy===u.id?'Updating…':u.active?'Deactivate':'Activate'}</button></td></tr>)}</tbody></table></div>
-   {!rows.length&&<div className="empty">No users found.</div>}
+
   </Panel>
  </Page>
 }
@@ -493,7 +493,7 @@ function AdminApplications(){
    <div className="table-wrap"><table><thead><tr><th>Student</th><th>Company</th><th>Role</th><th>Applied</th><th>Status</th></tr></thead><tbody>
    {rows.map(r=><tr key={r.id}><td>{r.student?.user?.fullName||r.student?.name||'Student'}</td><td>{r.placementDrive?.company?.name||'—'}</td><td>{r.placementDrive?.jobRole||'—'}</td><td>{r.appliedAt||'—'}</td><td><select className="status-select" disabled={busy===r.id} value={r.status} onChange={e=>changeStatus(r.id,e.target.value)}>{['APPLIED','SHORTLISTED','INTERVIEW','SELECTED','REJECTED'].map(s=><option key={s}>{s}</option>)}</select></td></tr>)}
    </tbody></table></div>
-   {!rows.length&&<div className="panel empty">No applications yet.</div>}
+
  </Page>
 }
 
