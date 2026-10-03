@@ -99,7 +99,7 @@ function Shell({children}){
 
   function logout(){
     localStorage.clear();
-    nav('/login');
+    window.location.replace('/login');
   }
 
   function goProfile(){
