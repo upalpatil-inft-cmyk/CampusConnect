@@ -84,7 +84,6 @@ public class AcademicAnalyticsController {
             row.put("id", subject.getId());
             row.put("code", subject.getCode());
             row.put("name", subject.getName());
-            row.put("credits", 0);
             row.put("marks", obtained);
             row.put("totalMarks", possible);
             row.put("percentage", Math.round(percentage * 10.0) / 10.0);
