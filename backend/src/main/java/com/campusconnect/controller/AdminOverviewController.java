@@ -4,6 +4,7 @@ import com.campusconnect.entity.Role;
 import com.campusconnect.repository.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.*;
 
@@ -63,8 +64,11 @@ public class AdminOverviewController {
     }
 
     @PatchMapping("/users/{id}/active")
-    public Object setActive(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
+    public Object setActive(Authentication a,@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
         var user = users.findById(id).orElseThrow();
+        if (user.getEmail().equalsIgnoreCase(a.getName()) && !Boolean.TRUE.equals(body.get("active"))) {
+            throw new IllegalArgumentException("You cannot deactivate your own admin account.");
+        }
         user.setActive(Boolean.TRUE.equals(body.get("active")));
         var saved = users.save(user);
 
