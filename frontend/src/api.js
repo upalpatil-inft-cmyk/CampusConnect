@@ -10,6 +10,21 @@ api.interceptors.request.use(config => {
   return config;
 });
 
+api.interceptors.response.use(
+  response => response,
+  error => {
+    const status = error.response?.status;
+    const url = error.config?.url || '';
+    if (status === 401 && !url.includes('/auth/login')) {
+      localStorage.clear();
+      if (window.location.pathname !== '/login') {
+        window.location.replace('/login');
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export async function login(email, password) {
   const { data } = await api.post('/auth/login', { email, password });
   localStorage.setItem('campusconnect_token', data.token);
