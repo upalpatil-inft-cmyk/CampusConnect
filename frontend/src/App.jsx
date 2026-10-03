@@ -85,14 +85,24 @@ function Shell({children}){
     r==='FACULTY'?'faculty@campusconnect.local':
     r==='ADMIN'?'admin@campusconnect.local':'student@campusconnect.local'
   );
-  const [notices,setNotices]=useState([]);
+  const [notifications,setNotifications]=useState([]);
+  const [unread,setUnread]=useState(0);
   const [noticeOpen,setNoticeOpen]=useState(false);
   const [profileOpen,setProfileOpen]=useState(false);
   const [academicOpen,setAcademicOpen]=useState(false);
 
-  useEffect(()=>{
-    api.get('/notices').then(res=>setNotices(Array.isArray(res.data)?res.data.slice(-5).reverse():[])).catch(()=>setNotices([]));
-  },[]);
+  async function loadNotifications(){
+    try{
+      const res=await api.get('/notifications');
+      setNotifications(Array.isArray(res.data?.items)?res.data.items:[]);
+      setUnread(Number(res.data?.unread||0));
+    }catch{
+      setNotifications([]);
+      setUnread(0);
+    }
+  }
+
+  useEffect(()=>{loadNotifications()},[]);
 
   const studentAcademic=[
     ['/timetable','Timetable',CalendarDays],
@@ -127,6 +137,26 @@ function Shell({children}){
     setAcademicOpen(false);
   }
 
+  async function openNotification(item){
+    setNoticeOpen(false);
+    if(!item.read){
+      try{
+        await api.patch('/notifications/'+item.id+'/read');
+        setUnread(v=>Math.max(0,v-1));
+        setNotifications(rows=>rows.map(n=>n.id===item.id?{...n,read:true}:n));
+      }catch{}
+    }
+    if(item.link) nav(item.link);
+  }
+
+  async function markAllRead(){
+    try{
+      await api.post('/notifications/read-all');
+      setNotifications(rows=>rows.map(n=>({...n,read:true})));
+      setUnread(0);
+    }catch{}
+  }
+
   function logout(){
     localStorage.clear();
     window.location.replace('/login');
@@ -145,8 +175,7 @@ function Shell({children}){
       </div>
 
       <nav className="topnav">
-        {topLinks.map(([to,label,Icon])=><NavLink key={to} to={to} end={to==='/'}
-          onClick={closeMenus}>
+        {topLinks.map(([to,label,Icon])=><NavLink key={to} to={to} end={to==='/'} onClick={closeMenus}>
           <Icon size={15}/>{label}
         </NavLink>)}
 
@@ -157,8 +186,7 @@ function Shell({children}){
           </button>
           {academicOpen&&<div className="nav-dropdown">
             <div className="nav-dropdown-title">{groupLabel}</div>
-            {grouped.map(([to,label,Icon])=><NavLink key={to} to={to} end
-              onClick={closeMenus}>
+            {grouped.map(([to,label,Icon])=><NavLink key={to} to={to} end onClick={closeMenus}>
               <Icon size={15}/><span>{label}</span>
             </NavLink>)}
           </div>}
@@ -167,21 +195,24 @@ function Shell({children}){
 
       <div className="top-actions">
         <div className="notification-wrap">
-          <button className="icon-btn" title="Notifications"
+          <button className={`icon-btn notification-trigger${unread>0?' has-unread':''}`} title="Notifications"
             onClick={()=>{setNoticeOpen(v=>!v);setProfileOpen(false);setAcademicOpen(false)}}>
             <Bell size={17}/>
-            {notices.length>0&&<span className="notification-dot"/>}
+            {unread>0&&<span className="notification-count">{unread>9?'9+':unread}</span>}
           </button>
           {noticeOpen&&<div className="dropdown notifications-dropdown">
             <div className="dropdown-head">
-              <div><b>Notifications</b><small>{notices.length ? 'Latest campus notices' : 'You are all caught up'}</small></div>
-              <Bell size={15}/>
+              <div><b>Notifications</b><small>{unread>0?`${unread} unread update${unread===1?'':'s'}`:'You are all caught up'}</small></div>
+              <div className="notification-head-actions">
+                {unread>0&&<button className="mark-read-btn" onClick={markAllRead}>Mark all read</button>}
+                <Bell size={15}/>
+              </div>
             </div>
             <div className="notification-list">
-              {notices.length ? notices.map(n=><button className="notification-item" key={n.id}
-                onClick={()=>setNoticeOpen(false)}>
-                <span className="notification-bullet"/>
-                <span><b>{n.title}</b><small>{n.content}</small></span>
+              {notifications.length ? notifications.map(n=><button className={`notification-item${n.read?'':' unread'}`} key={n.id} onClick={()=>openNotification(n)}>
+                <span className={`notification-bullet type-${String(n.type||'').toLowerCase()}`}/>
+                <span className="notification-copy"><b>{n.title}</b><small>{n.message}</small><em>{n.createdAt?new Date(n.createdAt).toLocaleString([], {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):''}</em></span>
+                {!n.read&&<span className="unread-dot"/>}
               </button>) : <div className="dropdown-empty">No notifications right now.</div>}
             </div>
           </div>}
@@ -209,7 +240,6 @@ function Shell({children}){
     <main className="content">{children}</main>
   </div>
 }
-
 function Page({eyebrow='CAMPUSCONNECT',title,subtitle,action,children}){return <><div className="page-head"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1>{subtitle&&<p className="subtitle">{subtitle}</p>}</div>{action}</div>{children}</>}
 function Panel({title,meta,children,className=''}){return <section className={'panel '+className}><div className="panel-head"><div><h2>{title}</h2>{meta&&<p>{meta}</p>}</div></div>{children}</section>}
 function Stat({label,value,note,accent='green',icon:Icon}){return <article className="stat-card"><div className="stat-top"><span className="label">{label}</span>{Icon&&<span className={'stat-icon '+accent}><Icon size={16}/></span>}</div><strong>{value}</strong><small>{note}</small></article>}
