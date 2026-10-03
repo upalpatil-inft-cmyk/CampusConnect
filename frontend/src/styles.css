@@ -156,3 +156,29 @@
  .dashboard-stats{grid-template-columns:1fr}
  .dashboard-hero{padding:21px}
 }
+
+
+/* Notifications 2.0 */
+.notification-trigger{position:relative}
+.notification-trigger.has-unread{background:#fff;box-shadow:0 7px 22px rgba(30,40,35,.08)}
+.notification-count{position:absolute;top:-4px;right:-5px;min-width:16px;height:16px;padding:0 4px;display:grid;place-items:center;border-radius:999px;background:var(--orange);color:#fff;border:2px solid #f8f6f1;font-size:8px;font-weight:800;line-height:1}
+.notifications-dropdown{width:365px;padding:0;overflow:hidden}
+.notifications-dropdown .dropdown-head{padding:13px 15px;border-bottom:1px solid var(--line);margin:0}
+.notification-head-actions{display:flex;align-items:center;gap:10px}
+.mark-read-btn{border:0;background:transparent;color:var(--green);font-size:9px;font-weight:800;cursor:pointer;padding:4px 0}
+.mark-read-btn:hover{text-decoration:underline}
+.notification-list{max-height:390px;overflow:auto}
+.notification-item{position:relative;width:100%;display:flex;align-items:flex-start;gap:10px;border:0;border-bottom:1px solid rgba(40,50,45,.06);background:transparent;padding:13px 15px;text-align:left;cursor:pointer}
+.notification-item:hover{background:#f7f5f0}
+.notification-item.unread{background:#fbfaf6}
+.notification-bullet{width:9px;height:9px;margin-top:5px;border-radius:50%;background:var(--green);flex:none;box-shadow:0 0 0 4px rgba(50,100,80,.08)}
+.notification-bullet.type-assignment{background:#d77b3d;box-shadow:0 0 0 4px rgba(215,123,61,.1)}
+.notification-bullet.type-deadline{background:#b45c45;box-shadow:0 0 0 4px rgba(180,92,69,.1)}
+.notification-bullet.type-placement{background:#7b6aa8;box-shadow:0 0 0 4px rgba(123,106,168,.1)}
+.notification-bullet.type-grade{background:#4d8b70;box-shadow:0 0 0 4px rgba(77,139,112,.1)}
+.notification-copy{min-width:0;display:block;padding-right:9px}
+.notification-copy b{display:block;color:var(--ink);font-size:11px;line-height:1.35}
+.notification-copy small{display:block;margin-top:3px;color:var(--muted);font-size:9px;line-height:1.45;white-space:normal}
+.notification-copy em{display:block;margin-top:5px;color:#9a9f9b;font-size:8px;font-style:normal}
+.unread-dot{width:6px;height:6px;margin-top:5px;margin-left:auto;border-radius:50%;background:var(--orange);flex:none}
+@media(max-width:700px){.notifications-dropdown{width:min(365px,calc(100vw - 28px))}}
