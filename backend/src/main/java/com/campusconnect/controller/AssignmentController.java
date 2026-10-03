@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/assignments")
@@ -40,9 +41,12 @@ public class AssignmentController {
         if(file.getSize()>5_000_000) throw new IllegalArgumentException("File must be 5 MB or smaller.");
         var student=students.findByUser(users.findByEmail(a.getName()).orElseThrow()).orElseThrow();
         var assignment=assignments.findById(assignmentId).orElseThrow();
+        if (assignment.getDeadline().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("This assignment deadline has passed.");
+        }
         var existing=submissions.findByStudent(student).stream().filter(s->s.getAssignment().getId().equals(assignmentId)).findFirst();
         var submission=existing.orElseGet(()->new Submission(assignment,student,file.getOriginalFilename()));
-        submission.attachFile(file.getBytes(),file.getContentType());
+        submission.attachFile(file.getBytes(),file.getContentType(),file.getOriginalFilename());
         submission = submissions.save(submission);
         return Map.of("id",submission.getId(),"fileName",submission.getFileName(),"submittedAt",submission.getSubmittedAt());
     }
@@ -52,6 +56,9 @@ public class AssignmentController {
     public Object submit(Authentication a,@Valid @RequestBody SubmissionRequest r){
         var student=students.findByUser(users.findByEmail(a.getName()).orElseThrow()).orElseThrow();
         var assignment=assignments.findById(r.assignmentId()).orElseThrow();
+        if (assignment.getDeadline().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("This assignment deadline has passed.");
+        }
         return submissions.save(new Submission(assignment,student,r.fileName()));
     }
 }
