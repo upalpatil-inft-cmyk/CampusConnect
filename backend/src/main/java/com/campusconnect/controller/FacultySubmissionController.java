@@ -1,8 +1,10 @@
 package com.campusconnect.controller;
 
+import com.campusconnect.entity.NotificationType;
 import com.campusconnect.repository.SubmissionRepository;
 import com.campusconnect.repository.UserRepository;
 import com.campusconnect.repository.FacultyRepository;
+import com.campusconnect.service.NotificationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,8 +17,9 @@ public class FacultySubmissionController {
     private final SubmissionRepository submissions;
     private final UserRepository users;
     private final FacultyRepository faculty;
-    public FacultySubmissionController(SubmissionRepository submissions,UserRepository users,FacultyRepository faculty){
-        this.submissions=submissions;this.users=users;this.faculty=faculty;
+    private final NotificationService notificationService;
+    public FacultySubmissionController(SubmissionRepository submissions,UserRepository users,FacultyRepository faculty,NotificationService notificationService){
+        this.submissions=submissions;this.users=users;this.faculty=faculty;this.notificationService=notificationService;
     }
 
     @GetMapping
@@ -43,6 +46,15 @@ public class FacultySubmissionController {
         String feedback=body.get("feedback")==null?"":body.get("feedback").toString();
         if(marks!=null && (marks<0 || marks>100)) throw new IllegalArgumentException("Marks must be between 0 and 100.");
         submission.grade(marks,feedback);
-        return submissions.save(submission);
+        var saved=submissions.save(submission);
+        notificationService.create(
+            submission.getStudent().getUser(),
+            NotificationType.GRADE,
+            "Assignment graded",
+            submission.getAssignment().getTitle()+" has been graded.",
+            "/assignments",
+            "GRADE:"+submission.getId()+":"+saved.getSubmittedAt()
+        );
+        return saved;
     }
 }
