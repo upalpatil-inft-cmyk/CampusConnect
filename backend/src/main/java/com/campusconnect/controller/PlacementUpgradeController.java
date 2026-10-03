@@ -26,6 +26,7 @@ public class PlacementUpgradeController {
     }
 
     @GetMapping("/student")
+    @PreAuthorize("hasRole('STUDENT')")
     public Object studentPlacements(Authentication a) {
         var student = students.findByUser(users.findByEmail(a.getName()).orElseThrow()).orElseThrow();
         var myApps = applications.findByStudent(student);
@@ -62,6 +63,7 @@ public class PlacementUpgradeController {
     }
 
     @GetMapping("/history")
+    @PreAuthorize("hasRole('STUDENT')")
     public Object placementHistory(Authentication a) {
         var student = students.findByUser(users.findByEmail(a.getName()).orElseThrow()).orElseThrow();
         return applications.findByStudent(student).stream()
@@ -75,6 +77,7 @@ public class PlacementUpgradeController {
     }
 
     @GetMapping("/stats")
+    @PreAuthorize("hasRole('STUDENT')")
     public Object placementStats(Authentication a) {
         var student = students.findByUser(users.findByEmail(a.getName()).orElseThrow()).orElseThrow();
         var apps = applications.findByStudent(student);
