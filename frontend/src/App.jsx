@@ -390,41 +390,41 @@ function FacultyDashboard(){
  </Page>
 }
 function FacultyAttendance(){
- const[students,setStudents]=useState([]),[subjects,setSubjects]=useState([]),[form,setForm]=useState({studentId:'',subjectId:'',date:new Date().toISOString().slice(0,10),present:true}),[busy,setBusy]=useState(false);
+ const[students,setStudents]=useState([]),[subjects,setSubjects]=useState([]),[form,setForm]=useState({studentId:'',subjectId:'',date:new Date().toISOString().slice(0,10),present:true}),[busy,setBusy]=useState(false),[message,setMessage]=useState(null);
  useEffect(()=>{Promise.all([api.get('/faculty/students'),api.get('/faculty/subjects')]).then(([a,b])=>{setStudents(a.data);setSubjects(b.data)}).catch(()=>{})},[]);
- async function save(e){e.preventDefault();setBusy(true);try{await api.post('/faculty/attendance',{...form,studentId:Number(form.studentId),subjectId:Number(form.subjectId)});alert('Attendance saved.')}catch(e){alert(e.response?.data?.message||'Unable to save attendance')}finally{setBusy(false)}}
+ async function save(e){e.preventDefault();setBusy(true);setMessage(null);try{await api.post('/faculty/attendance',{...form,studentId:Number(form.studentId),subjectId:Number(form.subjectId)});setMessage({type:'success',text:'Attendance saved successfully.'})}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to save attendance.'})}finally{setBusy(false)}}
  return <Page title="Mark attendance" subtitle="Select a student and subject instead of entering database IDs."><Panel title="Attendance entry"><form className="form-grid" onSubmit={save}>
    <label>Student<select required value={form.studentId} onChange={e=>setForm({...form,studentId:e.target.value})}><option value="">Choose student</option>{students.map(s=><option key={s.id} value={s.id}>{s.rollNumber} · {s.name}</option>)}</select></label>
    <label>Subject<select required value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}><option value="">Choose subject</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select></label>
    <label>Date<input type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})}/></label>
    <label>Status<select value={form.present} onChange={e=>setForm({...form,present:e.target.value==='true'})}><option value="true">Present</option><option value="false">Absent</option></select></label>
-   <button className="primary" disabled={busy}>{busy?'Saving…':'Save attendance'}</button>
+   <button className="primary" disabled={busy}>{busy?'Saving…':'Save attendance'}</button>{message&&<FormMessage type={message.type} message={message.text}/>} 
  </form></Panel></Page>
 }
 function FacultyMarks(){
- const[students,setStudents]=useState([]),[subjects,setSubjects]=useState([]),[form,setForm]=useState({studentId:'',subjectId:'',internalMarks:'',totalMarks:50}),[busy,setBusy]=useState(false);
+ const[students,setStudents]=useState([]),[subjects,setSubjects]=useState([]),[form,setForm]=useState({studentId:'',subjectId:'',internalMarks:'',totalMarks:50}),[busy,setBusy]=useState(false),[message,setMessage]=useState(null);
  useEffect(()=>{Promise.all([api.get('/faculty/students'),api.get('/faculty/subjects')]).then(([a,b])=>{setStudents(a.data);setSubjects(b.data)}).catch(()=>{})},[]);
- async function save(e){e.preventDefault();if(Number(form.internalMarks)>Number(form.totalMarks))return alert('Marks obtained cannot exceed total marks.');setBusy(true);try{await api.post('/faculty/marks',{...form,studentId:Number(form.studentId),subjectId:Number(form.subjectId),internalMarks:Number(form.internalMarks),totalMarks:Number(form.totalMarks)});alert('Marks saved.');setForm({...form,internalMarks:''})}catch(e){alert(e.response?.data?.message||'Unable to save marks')}finally{setBusy(false)}}
+ async function save(e){e.preventDefault();setMessage(null);if(Number(form.internalMarks)>Number(form.totalMarks))return setMessage({type:'error',text:'Marks obtained cannot exceed total marks.'});setBusy(true);try{await api.post('/faculty/marks',{...form,studentId:Number(form.studentId),subjectId:Number(form.subjectId),internalMarks:Number(form.internalMarks),totalMarks:Number(form.totalMarks)});setMessage({type:'success',text:'Marks saved successfully.'});setForm({...form,internalMarks:''})}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to save marks.'})}finally{setBusy(false)}}
  return <Page title="Record marks" subtitle="Choose the student and subject, then enter the assessment score."><Panel title="Marks entry"><form className="form-grid" onSubmit={save}>
    <label>Student<select required value={form.studentId} onChange={e=>setForm({...form,studentId:e.target.value})}><option value="">Choose student</option>{students.map(s=><option key={s.id} value={s.id}>{s.rollNumber} · {s.name}</option>)}</select></label>
    <label>Subject<select required value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}><option value="">Choose subject</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select></label>
    <label>Marks obtained<input required type="number" min="0" value={form.internalMarks} onChange={e=>setForm({...form,internalMarks:e.target.value})}/></label>
    <label>Total marks<input required type="number" min="1" value={form.totalMarks} onChange={e=>setForm({...form,totalMarks:e.target.value})}/></label>
-   <button className="primary" disabled={busy}>{busy?'Saving…':'Save marks'}</button>
+   <button className="primary" disabled={busy}>{busy?'Saving…':'Save marks'}</button>{message&&<FormMessage type={message.type} message={message.text}/>} 
  </form></Panel></Page>
 }
 function FacultyAssignments(){
- const[subjects,setSubjects]=useState([]),[rows,setRows]=useState([]),[form,setForm]=useState({title:'',description:'',subjectId:'',deadline:''}),[busy,setBusy]=useState(false);
+ const[subjects,setSubjects]=useState([]),[rows,setRows]=useState([]),[form,setForm]=useState({title:'',description:'',subjectId:'',deadline:''}),[busy,setBusy]=useState(false),[message,setMessage]=useState(null);
  async function load(){const r=await api.get('/faculty/assignments/mine');setRows(r.data)}
  useEffect(()=>{Promise.all([api.get('/faculty/subjects'),load()]).catch(()=>{})},[]);
- async function save(e){e.preventDefault();setBusy(true);try{await api.post('/faculty/assignments',{...form,subjectId:Number(form.subjectId)});alert('Assignment published.');setForm({title:'',description:'',subjectId:'',deadline:''});load()}catch(e){alert(e.response?.data?.message||'Unable to publish assignment')}finally{setBusy(false)}}
+ async function save(e){e.preventDefault();setMessage(null);setBusy(true);try{await api.post('/faculty/assignments',{...form,subjectId:Number(form.subjectId)});setMessage({type:'success',text:'Assignment published successfully.'});setForm({title:'',description:'',subjectId:'',deadline:''});load()}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to publish assignment.'})}finally{setBusy(false)}}
  return <Page title="Assignments" subtitle="Publish tasks and see what you have already assigned.">
    <Panel title="New assignment" meta="Clear instructions + a firm deadline"><form onSubmit={save}>
     <label>Title<input required value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/></label>
     <label>Description<textarea required value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label>
     <label>Subject<select required value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}><option value="">Choose subject</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select></label>
     <label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label>
-    <button className="primary" disabled={busy}>{busy?'Publishing…':'Publish assignment'}</button>
+    <button className="primary" disabled={busy}>{busy?'Publishing…':'Publish assignment'}</button>{message&&<FormMessage type={message.type} message={message.text}/>} 
    </form></Panel>
    <Panel title="Published by me" meta="Your current assignments"><DataTable cols={['title','subject','deadline','description']} rows={rows}/></Panel>
  </Page>
@@ -449,21 +449,21 @@ function AdminDashboard(){
  </Page>
 }
 function AdminCompanies(){
- const[form,setForm]=useState({name:'',website:'',description:''}),[rows,setRows]=useState([]),[busy,setBusy]=useState(false);
+ const[form,setForm]=useState({name:'',website:'',description:''}),[rows,setRows]=useState([]),[busy,setBusy]=useState(false),[message,setMessage]=useState(null);
  async function load(){const r=await api.get('/admin/companies');setRows(r.data)}
  useEffect(()=>{load()},[]);
- async function save(e){e.preventDefault();setBusy(true);try{await api.post('/admin/companies',form);setForm({name:'',website:'',description:''});await load()}catch(e){alert(e.response?.data?.message||'Unable to create company')}finally{setBusy(false)}}
+ async function save(e){e.preventDefault();setMessage(null);setBusy(true);try{await api.post('/admin/companies',form);setForm({name:'',website:'',description:''});setMessage({type:'success',text:'Company added successfully.'});await load()}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to create company.'})}finally{setBusy(false)}}
  return <Page title="Companies" subtitle="Manage organizations available for placement drives.">
-  <div className="profile-grid"><Panel title="New company"><form onSubmit={save}><label>Company name<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label><label>Website<input value={form.website} onChange={e=>setForm({...form,website:e.target.value})}/></label><label>Description<textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Saving…':'Add company'}</button></form></Panel><Panel title="Company directory" meta="Registered placement partners"><DataTable cols={['name','website','description']} rows={rows}/></Panel></div>
+  <div className="profile-grid"><Panel title="New company"><form onSubmit={save}><label>Company name<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label><label>Website<input value={form.website} onChange={e=>setForm({...form,website:e.target.value})}/></label><label>Description<textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Saving…':'Add company'}</button>{message&&<FormMessage type={message.type} message={message.text}/>} </form></Panel><Panel title="Company directory" meta="Registered placement partners"><DataTable cols={['name','website','description']} rows={rows}/></Panel></div>
  </Page>
 }
 function AdminDrives(){
- const[form,setForm]=useState({companyId:'',jobRole:'',packageLpa:'',minimumCgpa:'',deadline:'',eligibleBranches:'CS,IT'}),[companies,setCompanies]=useState([]),[rows,setRows]=useState([]),[busy,setBusy]=useState(false);
+ const[form,setForm]=useState({companyId:'',jobRole:'',packageLpa:'',minimumCgpa:'',deadline:'',eligibleBranches:'CS,IT'}),[companies,setCompanies]=useState([]),[rows,setRows]=useState([]),[busy,setBusy]=useState(false),[message,setMessage]=useState(null);
  async function load(){const[a,b]=await Promise.all([api.get('/admin/companies'),api.get('/admin/drives')]);setCompanies(a.data);setRows(b.data)}
  useEffect(()=>{load()},[]);
- async function save(e){e.preventDefault();setBusy(true);try{await api.post('/admin/drives',form);setForm({...form,jobRole:'',packageLpa:'',minimumCgpa:'',deadline:''});await load()}catch(e){alert(e.response?.data?.message||'Unable to create drive')}finally{setBusy(false)}}
+ async function save(e){e.preventDefault();setMessage(null);setBusy(true);try{await api.post('/admin/drives',form);setForm({...form,jobRole:'',packageLpa:'',minimumCgpa:'',deadline:''});setMessage({type:'success',text:'Placement drive created successfully.'});await load()}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to create drive.'})}finally{setBusy(false)}}
  return <Page title="Placement drives" subtitle="Create opportunities and review the current placement pipeline.">
-  <Panel title="New placement drive"><form className="form-grid" onSubmit={save}><label>Company<select required value={form.companyId} onChange={e=>setForm({...form,companyId:e.target.value})}><option value="">Select company</option>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Job role<input required value={form.jobRole} onChange={e=>setForm({...form,jobRole:e.target.value})}/></label><label>Package (LPA)<input required type="number" step="0.1" value={form.packageLpa} onChange={e=>setForm({...form,packageLpa:e.target.value})}/></label><label>Minimum CGPA<input required type="number" step="0.1" value={form.minimumCgpa} onChange={e=>setForm({...form,minimumCgpa:e.target.value})}/></label><label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label><label>Eligible branches<input value={form.eligibleBranches} onChange={e=>setForm({...form,eligibleBranches:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Creating…':'Create drive'}</button></form></Panel>  <Panel title="Drive directory" meta="Published placement opportunities"><DataTable cols={['company','jobRole','packageLpa','minimumCgpa','deadline','eligibleBranches']} rows={rows.map(d=>({...d,company:d.company?.name||'—'}))}/></Panel>
+  <Panel title="New placement drive"><form className="form-grid" onSubmit={save}><label>Company<select required value={form.companyId} onChange={e=>setForm({...form,companyId:e.target.value})}><option value="">Select company</option>{companies.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Job role<input required value={form.jobRole} onChange={e=>setForm({...form,jobRole:e.target.value})}/></label><label>Package (LPA)<input required type="number" step="0.1" value={form.packageLpa} onChange={e=>setForm({...form,packageLpa:e.target.value})}/></label><label>Minimum CGPA<input required type="number" step="0.1" value={form.minimumCgpa} onChange={e=>setForm({...form,minimumCgpa:e.target.value})}/></label><label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label><label>Eligible branches<input value={form.eligibleBranches} onChange={e=>setForm({...form,eligibleBranches:e.target.value})}/></label><button className="primary" disabled={busy}>{busy?'Creating…':'Create drive'}</button>{message&&<FormMessage type={message.type} message={message.text}/>} </form></Panel>  <Panel title="Drive directory" meta="Published placement opportunities"><DataTable cols={['company','jobRole','packageLpa','minimumCgpa','deadline','eligibleBranches']} rows={rows.map(d=>({...d,company:d.company?.name||'—'}))}/></Panel>
  </Page>
 }
 function AdminUsers(){
@@ -522,6 +522,8 @@ function Subjects(){
 }
 
 function EmptyState({icon:Icon=Inbox,title="Nothing here yet",message="There are no records to show right now."}){return <div className="empty-state"><span className="empty-icon"><Icon size={18}/></span><div><b>{title}</b><p>{message}</p></div></div>}
+
+function FormMessage({type="success",message}){if(!message)return null;return <div className={`form-message ${type}`}><span>{type==="success"?<CheckCircle2 size={15}/>:<CircleAlert size={15}/>}</span>{message}</div>}
 
 function DataTable({cols,rows,emptyTitle="Nothing here yet",emptyMessage="There are no records to show right now."}){if(!rows?.length)return <EmptyState title={emptyTitle} message={emptyMessage}/>;return <div className="table-wrap"><table><thead><tr>{cols.map(c=><th key={c}>{c.replace(/([A-Z])/g,' $1')}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={r.id||i}>{cols.map(c=><td key={c}>{typeof r[c]==='object'?JSON.stringify(r[c]):String(r[c]??'—')}</td>)}</tr>)}</tbody></table></div>}
 
