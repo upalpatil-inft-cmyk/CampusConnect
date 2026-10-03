@@ -15,5 +15,5 @@ public class Mark {
     public Mark() {}
     public Mark(Student s,Subject sub,double internal,double total){student=s;subject=sub;internalMarks=internal;totalMarks=total;}
     public Long getId(){return id;} public Student getStudent(){return student;} public Subject getSubject(){return subject;}
-    public double getInternalMarks(){return internalMarks;} public double getTotalMarks(){return totalMarks;}
+    public double getInternalMarks(){return internalMarks;} public double getTotalMarks(){return totalMarks;} public void update(double internal,double total){this.internalMarks=internal;this.totalMarks=total;}
 }
