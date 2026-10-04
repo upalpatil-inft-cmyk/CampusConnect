@@ -19,6 +19,9 @@ public class AdminController {
     @GetMapping("/companies") public Object companies(){return companies.findAll();}
     @PostMapping("/drives") public PlacementDrive drive(@Valid @RequestBody DriveRequest r){
         var c=companies.findById(r.companyId()).orElseThrow();
+        if (r.deadline().isBefore(java.time.LocalDate.now())) {
+            throw new IllegalArgumentException("Placement drive deadline cannot be in the past.");
+        }
         return drives.save(new PlacementDrive(c,r.jobRole(),r.packageLpa(),r.minimumCgpa(),r.deadline(),r.eligibleBranches()));
     }
     @GetMapping("/drives") public Object drives(){return drives.findAll();}
