@@ -416,17 +416,20 @@ function FacultyMarks(){
  </form></Panel></Page>
 }
 function FacultyAssignments(){
- const[subjects,setSubjects]=useState([]),[rows,setRows]=useState([]),[form,setForm]=useState({title:'',description:'',subjectId:'',deadline:''}),[busy,setBusy]=useState(false),[message,setMessage]=useState(null);
- async function load(){const r=await api.get('/faculty/assignments/mine');setRows(r.data)}
- useEffect(()=>{Promise.all([api.get('/faculty/subjects'),load()]).catch(()=>{})},[]);
- async function save(e){e.preventDefault();setMessage(null);setBusy(true);try{await api.post('/faculty/assignments',{...form,subjectId:Number(form.subjectId)});setMessage({type:'success',text:'Assignment published successfully.'});setForm({title:'',description:'',subjectId:'',deadline:''});load()}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to publish assignment.'})}finally{setBusy(false)}}
+ const[subjects,setSubjects]=useState([]),[rows,setRows]=useState([]),[form,setForm]=useState({title:'',description:'',subjectId:'',deadline:''}),[busy,setBusy]=useState(false),[loadingSubjects,setLoadingSubjects]=useState(true),[subjectsError,setSubjectsError]=useState(false),[message,setMessage]=useState(null);
+ async function loadAssignments(){try{const r=await api.get('/faculty/assignments/mine');setRows(Array.isArray(r.data)?r.data:[])}catch{setRows([])}}
+ async function loadSubjects(){setLoadingSubjects(true);setSubjectsError(false);try{const r=await api.get('/faculty/subjects');setSubjects(Array.isArray(r.data)?r.data:[])}catch{setSubjects([]);setSubjectsError(true)}finally{setLoadingSubjects(false)}}
+ useEffect(()=>{loadSubjects();loadAssignments()},[]);
+ async function save(e){e.preventDefault();setMessage(null);if(!form.subjectId){setMessage({type:'error',text:'Please choose a subject before publishing.'});return}setBusy(true);try{await api.post('/faculty/assignments',{...form,subjectId:Number(form.subjectId)});setMessage({type:'success',text:'Assignment published successfully.'});setForm({title:'',description:'',subjectId:'',deadline:''});await loadAssignments()}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to publish assignment.'})}finally{setBusy(false)}}
  return <Page title="Assignments" subtitle="Publish tasks and see what you have already assigned.">
    <Panel title="New assignment" meta="Clear instructions + a firm deadline"><form onSubmit={save}>
     <label>Title<input required value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/></label>
     <label>Description<textarea required value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label>
-    <label>Subject<select required value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}><option value="">Choose subject</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select></label>
+    <label>Subject<select required disabled={loadingSubjects||subjectsError||!subjects.length} value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}><option value="">{loadingSubjects?'Loading subjects…':subjectsError?'Unable to load subjects':subjects.length?'Choose subject':'No subjects available'}</option>{subjects.map(s=><option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select></label>
+    {subjectsError&&<FormMessage type="error" message="Could not load your department subjects. Refresh and try again."/>}
+    {!loadingSubjects&&!subjectsError&&!subjects.length&&<FormMessage type="error" message="No subjects are assigned to this faculty department yet."/>}
     <label>Deadline<input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></label>
-    <button className="primary" disabled={busy}>{busy?'Publishing…':'Publish assignment'}</button>{message&&<FormMessage type={message.type} message={message.text}/>} 
+    <button className="primary" disabled={busy||loadingSubjects||subjectsError||!subjects.length}>{busy?'Publishing…':'Publish assignment'}</button>{message&&<FormMessage type={message.type} message={message.text}/>} 
    </form></Panel>
    <Panel title="Published by me" meta="Your current assignments"><DataTable cols={['title','subject','deadline','description']} rows={rows}/></Panel>
  </Page>
