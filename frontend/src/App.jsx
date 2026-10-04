@@ -36,7 +36,7 @@ function Login() {
     <div className="login-orb orb-one"/>
     <div className="login-orb orb-two"/>
     <section className="login-card">
-      <div className="brand-mark">C</div>
+      <img className="brand-logo" src="/favicon.svg" alt="" aria-hidden="true" />
       <p className="eyebrow">CAMPUSCONNECT</p>
       <h1>Welcome back.</h1>
       <p className="login-copy">Sign in to access your college portal.</p>
@@ -170,7 +170,7 @@ function Shell({children}){
   return <div className="app-shell">
     <header className="topbar">
       <div className="brand">
-        <span className="brand-mark">C</span>
+        <img className="brand-logo" src="/favicon.svg" alt="" aria-hidden="true" />
         <span><strong>CampusConnect</strong><small>College portal</small></span>
       </div>
 
