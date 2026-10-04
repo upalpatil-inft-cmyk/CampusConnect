@@ -246,7 +246,7 @@ function Stat({label,value,note,accent='green',icon:Icon}){return <article class
 function Loading(){return <div className="loading">Loading your campus data…</div>}
 
 
-function CampusNavigator({data,onNavigate}){
+function CampusNavigator({data,onNavigate,onRefresh,refreshing,updatedAt}){
   const recommendations=Array.isArray(data?.recommendations)?data.recommendations:[];
   const score=Number(data?.readinessScore||0);
   const scoreLabel=score>=80?'Strong position':score>=60?'On track':'Needs attention';
@@ -257,8 +257,14 @@ function CampusNavigator({data,onNavigate}){
         <span className="label">PLACEMENT READINESS</span>
         <div className="readiness-score"><strong>{score}</strong><span>/100</span></div>
         <p>{scoreLabel} · {data?.summary||'Review the actions below.'}</p>
+        <small className="navigator-live">{updatedAt ? `Live data · refreshed ${updatedAt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : 'Live data · calculating now'}</small>
       </div>
-      <div className="readiness-ring" style={{'--score':score}}><b>{score}</b><span>ready</span></div>
+      <div className="navigator-head-actions">
+        <div className="readiness-ring" style={{'--score':score}}><b>{score}</b><span>ready</span></div>
+        <button type="button" className="secondary-btn navigator-refresh" onClick={onRefresh} disabled={refreshing}>
+          {refreshing?'Refreshing…':'Refresh'}
+        </button>
+      </div>
     </div>
     <div className="navigator-list">
       {recommendations.length ? recommendations.map((item,index)=><article className="navigator-item" key={item.type+'-'+item.title+'-'+index}>
@@ -276,10 +282,19 @@ function CampusNavigator({data,onNavigate}){
 
 function StudentDashboard(){
  const nav=useNavigate();
- const [me,setMe]=useState(null),[notices,setNotices]=useState([]),[marks,setMarks]=useState([]),[assignments,setAssignments]=useState([]),[attendance,setAttendance]=useState([]),[placements,setPlacements]=useState([]),[analytics,setAnalytics]=useState(null),[navigator,setNavigator]=useState(null),[busy,setBusy]=useState(true),[loadError,setLoadError]=useState(false);
+ const [me,setMe]=useState(null),[notices,setNotices]=useState([]),[marks,setMarks]=useState([]),[assignments,setAssignments]=useState([]),[attendance,setAttendance]=useState([]),[placements,setPlacements]=useState([]),[analytics,setAnalytics]=useState(null),[navigator,setNavigator]=useState(null),[navigatorRefreshing,setNavigatorRefreshing]=useState(false),[navigatorUpdatedAt,setNavigatorUpdatedAt]=useState(null),[busy,setBusy]=useState(true),[loadError,setLoadError]=useState(false);
+ async function refreshNavigator(){
+   setNavigatorRefreshing(true);
+   try{
+     const r=await api.get('/student/navigator',{params:{_t:Date.now()}});
+     setNavigator(r.data);
+     setNavigatorUpdatedAt(new Date());
+   }catch{}
+   finally{setNavigatorRefreshing(false)}
+ }
  useEffect(()=>{
-   Promise.all([api.get('/student/me'),api.get('/notices'),api.get('/student/marks'),api.get('/assignments'),api.get('/student/attendance'),api.get('/placement-upgrades/student'),api.get('/student/analytics'),api.get('/student/navigator')]).then(([a,b,c,d,e,f,g,h])=>{
-     setMe(a.data);setNotices(Array.isArray(b.data)?b.data:[]);setMarks(Array.isArray(c.data)?c.data:[]);setAssignments(Array.isArray(d.data)?d.data:[]);setAttendance(Array.isArray(e.data)?e.data:[]);setPlacements(Array.isArray(f.data)?f.data:[]);setAnalytics(g.data);setNavigator(h.data);
+   Promise.all([api.get('/student/me'),api.get('/notices'),api.get('/student/marks'),api.get('/assignments'),api.get('/student/attendance'),api.get('/placement-upgrades/student'),api.get('/student/analytics'),api.get('/student/navigator',{params:{_t:Date.now()}})]).then(([a,b,c,d,e,f,g,h])=>{
+     setMe(a.data);setNotices(Array.isArray(b.data)?b.data:[]);setMarks(Array.isArray(c.data)?c.data:[]);setAssignments(Array.isArray(d.data)?d.data:[]);setAttendance(Array.isArray(e.data)?e.data:[]);setPlacements(Array.isArray(f.data)?f.data:[]);setAnalytics(g.data);setNavigator(h.data);setNavigatorUpdatedAt(new Date());
    }).catch(()=>setLoadError(true)).finally(()=>setBusy(false));
  },[]);
  const attendancePct=analytics?.attendancePercentage!=null?`${analytics.attendancePercentage}%`:attendance.length?`${Math.round(attendance.filter(x=>x.present).length/attendance.length*100)}%`:'—';
@@ -291,7 +306,7 @@ function StudentDashboard(){
  return <Page eyebrow="STUDENT DASHBOARD" title={`${greeting}, ${me?.name?.split(' ')[0]||'there'}.`} subtitle="Your semester at a glance — academics, work and opportunities." action={<div className="semester">Semester {me?.semester??5}<i>•</i>{me?.department||'B.Tech INFT'}</div>}>
   <div className="dashboard-hero"><div><span className="label">THIS SEMESTER</span><h2>Stay on top of your campus life.</h2><p>Track performance, finish assignments and catch the opportunities that match your profile.</p></div><div className="hero-metrics"><div><strong>{analytics?.cgpa??me?.cgpa??'—'}</strong><span>CGPA</span></div><div><strong>{attendancePct}</strong><span>Attendance</span></div><div><strong>{eligibleDrives}</strong><span>Eligible drives</span></div></div></div>
   <div className="dashboard-stats"><Stat label="ATTENDANCE" value={attendancePct} note="Across recorded classes" icon={CheckCircle2}/><Stat label="CURRENT CGPA" value={me?.cgpa??'—'} note="Latest academic record" accent="orange" icon={GraduationCap}/><Stat label="OPEN ASSIGNMENTS" value={activeAssignments.length} note="Deadlines still open" accent="cream" icon={FileText}/><Stat label="ELIGIBLE DRIVES" value={eligibleDrives} note="Based on your profile" icon={BriefcaseBusiness}/></div>
-  <CampusNavigator data={navigator} onNavigate={route=>nav(route)}/>
+  <CampusNavigator data={navigator} onNavigate={route=>nav(route)} onRefresh={refreshNavigator} refreshing={navigatorRefreshing} updatedAt={navigatorUpdatedAt}/>
   <div className="dashboard-grid">
    <Panel title="Academic snapshot" meta="Latest subject records"><div className="subject-table">{marks.length?marks.slice(0,5).map((m,i)=><div className="subject-row" key={m.id||i}><div><b>{m.subject?.name||m.subject||m.subjectName||'Subject'}</b><small>Internal assessment</small></div><strong>{m.internalMarks??'—'}</strong><span>{m.totalMarks?`${m.internalMarks}/${m.totalMarks}`:'—'}</span></div>):<div className="empty">No marks recorded yet.</div>}</div><NavLink className="panel-link" to="/performance">View full performance <ArrowUpRight size={14}/></NavLink></Panel>
    <Panel title="Placement pulse" meta="Opportunities for you"><div className="placement-pulse"><div className="pulse-icon"><BriefcaseBusiness size={19}/></div><div><strong>{eligibleDrives} eligible drive{eligibleDrives===1?'':'s'}</strong><p>Review companies, packages and deadlines before applying.</p></div></div><NavLink className="panel-link" to="/placements">Explore placements <ArrowUpRight size={14}/></NavLink></Panel>
