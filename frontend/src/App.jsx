@@ -305,7 +305,7 @@ function Performance(){
 }
 
 function Assignments(){
- const[rows,setRows]=useState([]),[submissions,setSubmissions]=useState([]),[filter,setFilter]=useState('ALL'),[file,setFile]=useState(null),[busy,setBusy]=useState(false);
+ const[rows,setRows]=useState([]),[submissions,setSubmissions]=useState([]),[filter,setFilter]=useState('ALL'),[file,setFile]=useState(null),[busy,setBusy]=useState(false),[message,setMessage]=useState(null);
  async function load(){const[a,b]=await Promise.all([api.get('/assignments'),api.get('/assignments/student-submissions')]);setRows(a.data);setSubmissions(b.data)}
  useEffect(()=>{load()},[]);
  const submitted=new Map(submissions.map(x=>[x.assignmentId,x]));
@@ -325,6 +325,7 @@ function Assignments(){
  }
  function due(deadline){if(deadline<today)return 'Overdue'; const days=Math.ceil((new Date(deadline)-new Date(today))/86400000); return days===0?'Due today':`Due in ${days}d`}
  return <Page title="Assignments" subtitle="Tasks published by your faculty, with submission status and feedback.">
+  {message&&<FormMessage type={message.type} message={message.text}/>} 
   <div className="day-tabs assignment-filters">{['ALL','PENDING','SUBMITTED','OVERDUE'].map(x=><button key={x} className={filter===x?'active':''} onClick={()=>setFilter(x)}>{x[0]+x.slice(1).toLowerCase()}</button>)}</div>
   {!visible.length?<EmptyState icon={FileText} title={filter==='ALL'?'No assignments yet':`No ${filter.toLowerCase()} assignments`} message={filter==='ALL'?'Your faculty assignments will appear here.':'Try another filter to see other assignment states.'}/>:<div className="assignment-list">{visible.map(a=>{
     const s=submitted.get(a.id); const status=s?'SUBMITTED':(a.deadline<today?'OVERDUE':'PENDING');
@@ -356,7 +357,7 @@ function Placements(){
      <Stat label="SELECTED" value={stats?.selected??'—'} note="Placement history" accent="cream" icon={CheckCircle2}/>
    </div>
    <div className="day-tabs placement-filters">{['ALL','ELIGIBLE','APPLIED'].map(x=><button key={x} className={filter===x?'active':''} onClick={()=>setFilter(x)}>{x[0]+x.slice(1).toLowerCase()}</button>)}</div>
-   {applyMessage&&<FormMessage type={applyMessage.type} text={applyMessage.text}/>} 
+   {applyMessage&&<FormMessage type={applyMessage.type} message={applyMessage.text}/>} 
    {!visible.length?<EmptyState icon={BriefcaseBusiness} title={filter==='ALL'?'No placement drives yet':`No ${filter.toLowerCase()} opportunities`} message="New campus opportunities will appear here when they are published."/>:<div className="cards">{visible.map(d=><article className="op-card placement-card" key={d.id}>
      <div className="placement-company"><span className="label">COMPANY</span><h3>{d.company}</h3></div>
      <p>{d.jobRole}</p><strong>₹{d.packageLpa} LPA</strong>
