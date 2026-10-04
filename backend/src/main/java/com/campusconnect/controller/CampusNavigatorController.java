@@ -165,18 +165,18 @@ public class CampusNavigatorController {
                 .comparingInt((Map<String, Object> x) -> priorityRank((String) x.get("priority")))
                 .thenComparing(x -> String.valueOf(x.get("dueDate")), Comparator.nullsLast(Comparator.naturalOrder())));
 
-        if (recommendations.size() > 6) {
-            recommendations = new ArrayList<>(recommendations.subList(0, 6));
-        }
+        List<Map<String, Object>> finalRecommendations = recommendations.size() > 6
+                ? new ArrayList<>(recommendations.subList(0, 6))
+                : recommendations;
 
         int readiness = readinessScore(student, attendancePct, recorded, studentMarks, eligibleDrives, appliedDriveIds, profileIncomplete, currentAssignments, submittedAssignmentIds);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("readinessScore", readiness);
-        response.put("summary", recommendations.isEmpty()
+        response.put("summary", finalRecommendations.isEmpty()
                 ? "You're in a strong position. No urgent campus actions need your attention."
-                : "You have " + recommendations.size() + " action" + (recommendations.size() == 1 ? "" : "s") + " worth reviewing.");
-        response.put("recommendations", recommendations);
+                : "You have " + finalRecommendations.size() + " action" + (finalRecommendations.size() == 1 ? "" : "s") + " worth reviewing.");
+        response.put("recommendations", finalRecommendations);
         response.put("eligibleDrives", eligibleDrives.size());
         response.put("pendingAssignments", currentAssignments.stream().filter(a -> !submittedAssignmentIds.contains(a.getId())).count());
         response.put("attendancePercentage", Math.round(attendancePct * 10.0) / 10.0);
