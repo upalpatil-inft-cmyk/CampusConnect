@@ -36,7 +36,7 @@ function Login() {
     <div className="login-orb orb-one"/>
     <div className="login-orb orb-two"/>
     <section className="login-card">
-      <img className="brand-logo" src="/favicon.svg" alt="" aria-hidden="true" />
+      <div className="brand-mark">C</div>
       <p className="eyebrow">CAMPUSCONNECT</p>
       <h1>Welcome back.</h1>
       <p className="login-copy">Sign in to access your college portal.</p>
