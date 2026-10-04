@@ -1,4 +1,9 @@
 package com.campusconnect.dto;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
-public record AssignmentRequest(@NotBlank String title,@NotBlank String description,Long subjectId,@NotNull LocalDate deadline){}
+public record AssignmentRequest(
+    @NotBlank @Size(max=200) String title,
+    @NotBlank @Size(max=3000) String description,
+    @NotNull Long subjectId,
+    @NotNull LocalDate deadline
+) {}
