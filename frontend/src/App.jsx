@@ -245,11 +245,40 @@ function Panel({title,meta,children,className=''}){return <section className={'p
 function Stat({label,value,note,accent='green',icon:Icon}){return <article className="stat-card"><div className="stat-top"><span className="label">{label}</span>{Icon&&<span className={'stat-icon '+accent}><Icon size={16}/></span>}</div><strong>{value}</strong><small>{note}</small></article>}
 function Loading(){return <div className="loading">Loading your campus data…</div>}
 
+
+function CampusNavigator({data,onNavigate}){
+  const recommendations=Array.isArray(data?.recommendations)?data.recommendations:[];
+  const score=Number(data?.readinessScore||0);
+  const scoreLabel=score>=80?'Strong position':score>=60?'On track':'Needs attention';
+  const priorityClass={HIGH:'high',MEDIUM:'medium',LOW:'low'};
+  return <Panel title="Campus Navigator" meta="Your next best actions, based on your live campus data." className="navigator-panel">
+    <div className="navigator-head">
+      <div>
+        <span className="label">PLACEMENT READINESS</span>
+        <div className="readiness-score"><strong>{score}</strong><span>/100</span></div>
+        <p>{scoreLabel} · {data?.summary||'Review the actions below.'}</p>
+      </div>
+      <div className="readiness-ring" style={{'--score':score}}><b>{score}</b><span>ready</span></div>
+    </div>
+    <div className="navigator-list">
+      {recommendations.length ? recommendations.map((item,index)=><article className="navigator-item" key={item.type+'-'+item.title+'-'+index}>
+        <div className={`navigator-priority ${priorityClass[item.priority]||'low'}`}>{item.priority==='HIGH'?'!':item.priority==='MEDIUM'?'•':'+'}</div>
+        <div className="navigator-copy">
+          <div className="navigator-title"><b>{item.title}</b><span>{item.type}</span></div>
+          <p>{item.reason}</p>
+          <small>{item.detail}</small>
+        </div>
+        <button className="navigator-action" onClick={()=>onNavigate(item.actionRoute)}>{item.actionLabel}<ArrowUpRight size={14}/></button>
+      </article>) : <EmptyState icon={CheckCircle2} title="You're clear for now" message="No urgent assignments, placement actions or academic warnings were found."/>}
+    </div>
+  </Panel>
+}
+
 function StudentDashboard(){
- const [me,setMe]=useState(null),[notices,setNotices]=useState([]),[marks,setMarks]=useState([]),[assignments,setAssignments]=useState([]),[attendance,setAttendance]=useState([]),[placements,setPlacements]=useState([]),[analytics,setAnalytics]=useState(null),[busy,setBusy]=useState(true),[loadError,setLoadError]=useState(false);
+ const [me,setMe]=useState(null),[notices,setNotices]=useState([]),[marks,setMarks]=useState([]),[assignments,setAssignments]=useState([]),[attendance,setAttendance]=useState([]),[placements,setPlacements]=useState([]),[analytics,setAnalytics]=useState(null),[navigator,setNavigator]=useState(null),[busy,setBusy]=useState(true),[loadError,setLoadError]=useState(false);
  useEffect(()=>{
-   Promise.all([api.get('/student/me'),api.get('/notices'),api.get('/student/marks'),api.get('/assignments'),api.get('/student/attendance'),api.get('/placement-upgrades/student'),api.get('/student/analytics')]).then(([a,b,c,d,e,f,g])=>{
-     setMe(a.data);setNotices(Array.isArray(b.data)?b.data:[]);setMarks(Array.isArray(c.data)?c.data:[]);setAssignments(Array.isArray(d.data)?d.data:[]);setAttendance(Array.isArray(e.data)?e.data:[]);setPlacements(Array.isArray(f.data)?f.data:[]);setAnalytics(g.data);
+   Promise.all([api.get('/student/me'),api.get('/notices'),api.get('/student/marks'),api.get('/assignments'),api.get('/student/attendance'),api.get('/placement-upgrades/student'),api.get('/student/analytics'),api.get('/student/navigator')]).then(([a,b,c,d,e,f,g,h])=>{
+     setMe(a.data);setNotices(Array.isArray(b.data)?b.data:[]);setMarks(Array.isArray(c.data)?c.data:[]);setAssignments(Array.isArray(d.data)?d.data:[]);setAttendance(Array.isArray(e.data)?e.data:[]);setPlacements(Array.isArray(f.data)?f.data:[]);setAnalytics(g.data);setNavigator(h.data);
    }).catch(()=>setLoadError(true)).finally(()=>setBusy(false));
  },[]);
  const attendancePct=analytics?.attendancePercentage!=null?`${analytics.attendancePercentage}%`:attendance.length?`${Math.round(attendance.filter(x=>x.present).length/attendance.length*100)}%`:'—';
@@ -261,6 +290,7 @@ function StudentDashboard(){
  return <Page eyebrow="STUDENT DASHBOARD" title={`${greeting}, ${me?.name?.split(' ')[0]||'there'}.`} subtitle="Your semester at a glance — academics, work and opportunities." action={<div className="semester">Semester {me?.semester??5}<i>•</i>{me?.department||'B.Tech INFT'}</div>}>
   <div className="dashboard-hero"><div><span className="label">THIS SEMESTER</span><h2>Stay on top of your campus life.</h2><p>Track performance, finish assignments and catch the opportunities that match your profile.</p></div><div className="hero-metrics"><div><strong>{analytics?.cgpa??me?.cgpa??'—'}</strong><span>CGPA</span></div><div><strong>{attendancePct}</strong><span>Attendance</span></div><div><strong>{eligibleDrives}</strong><span>Eligible drives</span></div></div></div>
   <div className="dashboard-stats"><Stat label="ATTENDANCE" value={attendancePct} note="Across recorded classes" icon={CheckCircle2}/><Stat label="CURRENT CGPA" value={me?.cgpa??'—'} note="Latest academic record" accent="orange" icon={GraduationCap}/><Stat label="OPEN ASSIGNMENTS" value={activeAssignments.length} note="Deadlines still open" accent="cream" icon={FileText}/><Stat label="ELIGIBLE DRIVES" value={eligibleDrives} note="Based on your profile" icon={BriefcaseBusiness}/></div>
+  <CampusNavigator data={navigator} onNavigate={route=>window.history.pushState({},'',route) || window.dispatchEvent(new PopStateEvent('popstate'))}/>
   <div className="dashboard-grid">
    <Panel title="Academic snapshot" meta="Latest subject records"><div className="subject-table">{marks.length?marks.slice(0,5).map((m,i)=><div className="subject-row" key={m.id||i}><div><b>{m.subject?.name||m.subject||m.subjectName||'Subject'}</b><small>Internal assessment</small></div><strong>{m.internalMarks??'—'}</strong><span>{m.totalMarks?`${m.internalMarks}/${m.totalMarks}`:'—'}</span></div>):<div className="empty">No marks recorded yet.</div>}</div><NavLink className="panel-link" to="/performance">View full performance <ArrowUpRight size={14}/></NavLink></Panel>
    <Panel title="Placement pulse" meta="Opportunities for you"><div className="placement-pulse"><div className="pulse-icon"><BriefcaseBusiness size={19}/></div><div><strong>{eligibleDrives} eligible drive{eligibleDrives===1?'':'s'}</strong><p>Review companies, packages and deadlines before applying.</p></div></div><NavLink className="panel-link" to="/placements">Explore placements <ArrowUpRight size={14}/></NavLink></Panel>
