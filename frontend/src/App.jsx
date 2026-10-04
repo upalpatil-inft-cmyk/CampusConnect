@@ -275,6 +275,7 @@ function CampusNavigator({data,onNavigate}){
 }
 
 function StudentDashboard(){
+ const nav=useNavigate();
  const [me,setMe]=useState(null),[notices,setNotices]=useState([]),[marks,setMarks]=useState([]),[assignments,setAssignments]=useState([]),[attendance,setAttendance]=useState([]),[placements,setPlacements]=useState([]),[analytics,setAnalytics]=useState(null),[navigator,setNavigator]=useState(null),[busy,setBusy]=useState(true),[loadError,setLoadError]=useState(false);
  useEffect(()=>{
    Promise.all([api.get('/student/me'),api.get('/notices'),api.get('/student/marks'),api.get('/assignments'),api.get('/student/attendance'),api.get('/placement-upgrades/student'),api.get('/student/analytics'),api.get('/student/navigator')]).then(([a,b,c,d,e,f,g,h])=>{
