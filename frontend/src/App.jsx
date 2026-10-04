@@ -510,7 +510,7 @@ function Timetable(){
       <div className="class-time"><Clock3 size={15}/><b>{x.startTime.slice(0,5)} – {x.endTime.slice(0,5)}</b><span>{x.day}</span></div>
       <div className="class-main"><span className="label">{x.code}</span><h3>{x.subject}</h3><p>{x.faculty}</p></div>
       <div className="class-room"><MapPin size={14}/>{x.room}</div>
-   </article>)}</div>
+   </article>)}</div>}
  </Page>
 }
 
