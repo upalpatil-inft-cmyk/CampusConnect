@@ -1,7 +1,7 @@
 import React from 'react'
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BriefcaseBusiness, CalendarDays, Clock3, MapPin, CheckCircle2, ClipboardCheck, FileText, GraduationCap, LayoutDashboard, LogOut, UserRound, Users, Building2, UserCheck, ArrowUpRight, BookOpen, CircleAlert, TrendingUp, ChevronDown } from 'lucide-react';
+import { Bell, BriefcaseBusiness, CalendarDays, Clock3, MapPin, CheckCircle2, ClipboardCheck, FileText, GraduationCap, LayoutDashboard, LogOut, UserRound, Users, Building2, UserCheck, ArrowUpRight, BookOpen, CircleAlert, TrendingUp, ChevronDown, Inbox } from 'lucide-react';
 import { api, login } from './api';
 
 const role = () => localStorage.getItem('campusconnect_role');
@@ -430,7 +430,7 @@ function FacultyAssignments(){
  </Page>
 }
 
-function FacultySubmissions(){const[rows,setRows]=useState([]);const[busy,setBusy]=useState(null);const[message,setMessage]=useState(null);async function load(){const r=await api.get('/faculty/submissions');setRows(r.data)}useEffect(()=>{load()},[]);async function grade(id){const marks=prompt('Marks (0-100):');if(marks===null)return;const feedback=prompt('Feedback:')||'';setBusy(id);try{await api.patch(`/faculty/submissions/${id}/grade`,{marks,feedback});await load()}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to grade submission'})}finally{setBusy(null)}}return <Page title="Review submissions" subtitle="Grade student work and leave concise feedback."><div className="assignment-list">{rows.map(s=><article className="assignment-item" key={s.id}><div><span className="label">{s.assignment}</span><h3>{s.student}</h3><p>{s.fileName}</p><small>Submitted · {s.submittedAt}</small></div><div className="assignment-action"><span className="status-ok">{s.marks==='—'?'Not graded':`Marks: ${s.marks}`}</span><button className="primary" disabled={busy===s.id} onClick={()=>grade(s.id)}>{busy===s.id?'Saving…':'Grade'}</button></div></article>)}{!rows.length&&<div className="panel empty">No submissions yet.</div>}</div></Page>}
+function FacultySubmissions(){const[rows,setRows]=useState([]);const[busy,setBusy]=useState(null);const[message,setMessage]=useState(null);const[gradeForm,setGradeForm]=useState(null);async function load(){const r=await api.get('/faculty/submissions');setRows(r.data)}useEffect(()=>{load()},[]);async function grade(id){const marks=Number(gradeForm?.marks);if(!Number.isFinite(marks)||marks<0||marks>100)return setMessage({type:'error',text:'Marks must be between 0 and 100.'});const feedback=String(gradeForm?.feedback||'').trim();setBusy(id);setMessage(null);try{await api.patch(`/faculty/submissions/${id}/grade`,{marks,feedback});setGradeForm(null);await load();setMessage({type:'success',text:'Submission graded successfully.'})}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to grade submission'})}finally{setBusy(null)}}return <Page title="Review submissions" subtitle="Grade student work and leave concise feedback."><div className="assignment-list">{message&&<FormMessage type={message.type} message={message.text}/>} {rows.map(s=><article className="assignment-item" key={s.id}><div><span className="label">{s.assignment}</span><h3>{s.student}</h3><p>{s.fileName}</p><small>Submitted · {s.submittedAt}</small></div><div className="assignment-action">{gradeForm?.id===s.id?<div className="grade-form"><input type="number" min="0" max="100" step="0.01" placeholder="Marks 0–100" value={gradeForm.marks} onChange={e=>setGradeForm({...gradeForm,marks:e.target.value})}/><input placeholder="Feedback (optional)" value={gradeForm.feedback} onChange={e=>setGradeForm({...gradeForm,feedback:e.target.value})}/><button className="primary" disabled={busy===s.id} onClick={()=>grade(s.id)}>{busy===s.id?'Saving…':'Save grade'}</button><button className="secondary-btn" type="button" onClick={()=>setGradeForm(null)}>Cancel</button></div>:<><span className="status-ok">{s.marks==='—'?'Not graded':`Marks: ${s.marks}`}</span><button className="primary" onClick={()=>setGradeForm({id:s.id,marks:s.marks==='—'?'':s.marks,feedback:''})}>{s.marks==='—'?'Grade':'Update'}</button></>}</div></article>)}{!rows.length&&<div className="panel empty">No submissions yet.</div>}</div></Page>}
 function AdminDashboard(){
  const[stats,setStats]=useState(null);
  useEffect(()=>{api.get('/admin/overview').then(r=>setStats(r.data)).catch(()=>setStats(null))},[]);
@@ -467,20 +467,19 @@ function AdminDrives(){
  </Page>
 }
 function AdminUsers(){
- const[rows,setRows]=useState([]),[busy,setBusy]=useState(null);
+ const[rows,setRows]=useState([]),[busy,setBusy]=useState(null),[message,setMessage]=useState(null);
  async function load(){const r=await api.get('/admin/users');setRows(r.data)}
  useEffect(()=>{load()},[]);
  async function toggle(id,active){setBusy(id);try{await api.patch('/admin/users/'+id+'/active',{active:!active});await load()}catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to update user'})}finally{setBusy(null)}}
  return <Page title="User management" subtitle="Review account roles and control access to the portal.">
   <Panel title="User directory" meta="Account status and role overview">
-   <div className="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Access</th></tr></thead><tbody>{rows.map(u=><tr key={u.id}><td><b>{u.name}</b></td><td>{u.email}</td><td><span className="label">{u.role}</span></td><td><span className={u.active?'status-ok':'status-bad'}>{u.active?'Active':'Inactive'}</span></td><td><button className={u.active?'secondary-btn':'primary'} disabled={busy===u.id} onClick={()=>toggle(u.id,u.active)}>{busy===u.id?'Updating…':u.active?'Deactivate':'Activate'}</button></td></tr>)}</tbody></table></div>
-
+   {message&&<FormMessage type={message.type} message={message.text}/>}<div className="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Access</th></tr></thead><tbody>{rows.map(u=><tr key={u.id}><td><b>{u.name}</b></td><td>{u.email}</td><td><span className="label">{u.role}</span></td><td><span className={u.active?'status-ok':'status-bad'}>{u.active?'Active':'Inactive'}</span></td><td><button className={u.active?'secondary-btn':'primary'} disabled={busy===u.id} onClick={()=>toggle(u.id,u.active)}>{busy===u.id?'Updating…':u.active?'Deactivate':'Activate'}</button></td></tr>)}</tbody></table></div>
   </Panel>
  </Page>
 }
 
 function AdminApplications(){
- const[rows,setRows]=useState([]),[busy,setBusy]=useState(null);
+ const[rows,setRows]=useState([]),[busy,setBusy]=useState(null),[message,setMessage]=useState(null);
  async function load(){const r=await api.get('/admin/applications');setRows(r.data)}
  useEffect(()=>{load()},[]);
  async function changeStatus(id,status){
@@ -490,7 +489,7 @@ function AdminApplications(){
    finally{setBusy(null)}
  }
  return <Page title="Applications" subtitle="Review and update placement application progress.">
-   <div className="table-wrap"><table><thead><tr><th>Student</th><th>Company</th><th>Role</th><th>Applied</th><th>Status</th></tr></thead><tbody>
+   {message&&<FormMessage type={message.type} message={message.text}/>}<div className="table-wrap"><table><thead><tr><th>Student</th><th>Company</th><th>Role</th><th>Applied</th><th>Status</th></tr></thead><tbody>
    {rows.map(r=><tr key={r.id}><td>{r.student?.user?.fullName||r.student?.name||'Student'}</td><td>{r.placementDrive?.company?.name||'—'}</td><td>{r.placementDrive?.jobRole||'—'}</td><td>{r.appliedAt||'—'}</td><td><select className="status-select" disabled={busy===r.id} value={r.status} onChange={e=>changeStatus(r.id,e.target.value)}>{['APPLIED','SHORTLISTED','INTERVIEW','SELECTED','REJECTED'].map(s=><option key={s}>{s}</option>)}</select></td></tr>)}
    </tbody></table></div>
 
@@ -509,7 +508,7 @@ function Timetable(){
       <div className="class-time"><Clock3 size={15}/><b>{x.startTime.slice(0,5)} – {x.endTime.slice(0,5)}</b><span>{x.day}</span></div>
       <div className="class-main"><span className="label">{x.code}</span><h3>{x.subject}</h3><p>{x.faculty}</p></div>
       <div className="class-room"><MapPin size={14}/>{x.room}</div>
-   </article>)}{!visible.length&&<div className="panel empty">No classes scheduled for this view.</div>}</div>
+   </article>)}</div>
  </Page>
 }
 
