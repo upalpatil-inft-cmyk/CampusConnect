@@ -51,8 +51,15 @@ public class FacultyController {
         var f=currentFaculty(a);
         var s=students.findById(r.studentId()).orElseThrow(); var sub=subjects.findById(r.subjectId()).orElseThrow();
         verifyScope(f,s,sub);
+        if (r.internalMarks() > r.totalMarks()) {
+            throw new IllegalArgumentException("Marks obtained cannot exceed total marks.");
+        }
+        if (r.totalMarks() > 1000) {
+            throw new IllegalArgumentException("Total marks are too high.");
+        }
         var saved=marks.findByStudentAndSubject(s,sub);
-        if(saved==null) saved=new Mark(s,sub,r.internalMarks(),r.totalMarks()); else saved.update(r.internalMarks(),r.totalMarks());\n        saved=marks.save(saved);
+        if(saved==null) saved=new Mark(s,sub,r.internalMarks(),r.totalMarks()); else saved.update(r.internalMarks(),r.totalMarks());
+        saved=marks.save(saved);
         return Map.of("id",saved.getId(),"studentId",s.getId(),"student",s.getUser().getFullName(),
                 "subject",sub.getName(),"internalMarks",saved.getInternalMarks(),"totalMarks",saved.getTotalMarks());
     }
@@ -61,6 +68,9 @@ public class FacultyController {
     public Object createAssignment(Authentication a,@Valid @RequestBody AssignmentRequest r){
         var f=currentFaculty(a);
         var sub=subjects.findById(r.subjectId()).orElseThrow();
+        if (r.deadline().isBefore(java.time.LocalDate.now())) {
+            throw new IllegalArgumentException("Assignment deadline cannot be in the past.");
+        }
         if (!sub.getDepartment().getId().equals(f.getDepartment().getId())) {
             throw new IllegalArgumentException("You can only publish assignments for your department.");
         }
