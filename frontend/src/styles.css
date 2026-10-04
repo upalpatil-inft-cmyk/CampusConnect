@@ -288,3 +288,36 @@ button:disabled{cursor:not-allowed;opacity:.62}
   .panel,.stat,.subject-card,.class-card,.op-card,.assignment-card{box-shadow:0 8px 24px rgba(38,44,39,.04)}
   .table-wrap{border-radius:14px}
 }
+
+
+.navigator-panel{margin-top:22px}
+.navigator-head{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:4px 0 20px;border-bottom:1px solid rgba(32,55,47,.12)}
+.navigator-head p{margin:7px 0 0;color:var(--muted);max-width:680px}
+.readiness-score{display:flex;align-items:baseline;gap:5px;margin-top:5px}
+.readiness-score strong{font-size:42px;line-height:1;letter-spacing:-2px}
+.readiness-score span{color:var(--muted);font-weight:700}
+.readiness-ring{width:78px;height:78px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:conic-gradient(var(--green) calc(var(--score) * 1%), rgba(32,55,47,.09) 0);position:relative;flex:none}
+.readiness-ring:after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--panel)}
+.readiness-ring b,.readiness-ring span{position:relative;z-index:1}
+.readiness-ring b{font-size:19px}
+.readiness-ring span{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
+.navigator-list{display:grid;gap:10px;padding-top:16px}
+.navigator-item{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:13px;align-items:center;padding:14px 0}
+.navigator-priority{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-weight:900}
+.navigator-priority.high{background:rgba(194,68,55,.12);color:#a63c31}
+.navigator-priority.medium{background:rgba(242,140,40,.14);color:#a95c13}
+.navigator-priority.low{background:rgba(47,74,63,.1);color:var(--green)}
+.navigator-copy{min-width:0}
+.navigator-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.navigator-title b{font-size:14px}
+.navigator-title span{font-size:9px;letter-spacing:.08em;font-weight:800;color:var(--muted);text-transform:uppercase}
+.navigator-copy p{margin:3px 0 2px;font-size:13px;color:var(--ink)}
+.navigator-copy small{color:var(--muted);font-size:12px}
+.navigator-action{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:var(--green);font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap}
+.navigator-action:hover{text-decoration:underline}
+@media(max-width:700px){
+ .navigator-head{align-items:flex-start}
+ .readiness-ring{width:68px;height:68px}
+ .navigator-item{grid-template-columns:30px 1fr}
+ .navigator-action{grid-column:2;justify-self:start}
+}
