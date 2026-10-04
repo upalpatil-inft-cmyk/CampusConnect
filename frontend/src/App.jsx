@@ -337,7 +337,7 @@ function Assignments(){
  </Page>
 }
 function Placements(){
- const[rows,setRows]=useState([]),[apps,setApps]=useState([]),[history,setHistory]=useState([]),[stats,setStats]=useState(null),[filter,setFilter]=useState('ALL');
+ const[rows,setRows]=useState([]),[apps,setApps]=useState([]),[history,setHistory]=useState([]),[stats,setStats]=useState(null),[filter,setFilter]=useState('ALL'),[applyMessage,setApplyMessage]=useState(null);
  async function load(){
    const[a,b,c,d]=await Promise.all([api.get('/placement-upgrades/student'),api.get('/student/applications'),api.get('/placement-upgrades/history'),api.get('/placement-upgrades/stats')]);
    setRows(a.data);setApps(b.data);setHistory(c.data);setStats(d.data);
@@ -356,13 +356,14 @@ function Placements(){
      <Stat label="SELECTED" value={stats?.selected??'—'} note="Placement history" accent="cream" icon={CheckCircle2}/>
    </div>
    <div className="day-tabs placement-filters">{['ALL','ELIGIBLE','APPLIED'].map(x=><button key={x} className={filter===x?'active':''} onClick={()=>setFilter(x)}>{x[0]+x.slice(1).toLowerCase()}</button>)}</div>
+   {applyMessage&&<FormMessage type={applyMessage.type} text={applyMessage.text}/>} 
    {!visible.length?<EmptyState icon={BriefcaseBusiness} title={filter==='ALL'?'No placement drives yet':`No ${filter.toLowerCase()} opportunities`} message="New campus opportunities will appear here when they are published."/>:<div className="cards">{visible.map(d=><article className="op-card placement-card" key={d.id}>
      <div className="placement-company"><span className="label">COMPANY</span><h3>{d.company}</h3></div>
      <p>{d.jobRole}</p><strong>₹{d.packageLpa} LPA</strong>
      <div className="eligibility-box"><b>Eligibility</b><span className={d.cgpaEligible?'ok':'bad'}>{d.cgpaEligible?'✓':'×'} CGPA {d.minimumCgpa}</span><span className={d.branchEligible?'ok':'bad'}>{d.branchEligible?'✓':'×'} {d.eligibleBranches||'All branches'}</span></div>
      <small>Deadline · {d.deadline}</small>
      {d.applicationStatus?<div className="status-ok"><CheckCircle2 size={15}/> {d.applicationStatus}</div>:<button className="primary" disabled={!d.eligible} onClick={()=>apply(d.id)}>{d.eligible?'Apply now':'Not eligible'} <ArrowUpRight size={14}/></button>}
-   </article>)}</div>
+   </article>)}</div>}
    <div className="profile-grid placement-bottom">
      <Panel title="My applications" meta="Current application status"><DataTable cols={['company','role','status']} rows={apps}/></Panel>
      <Panel title="Placement history" meta="Selected opportunities"><DataTable cols={['company','role','packageLpa','selectedAt']} rows={history}/></Panel>
