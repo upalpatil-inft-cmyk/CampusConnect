@@ -20,6 +20,14 @@ public class DataSeeder {
             String demoFacultyPassword = System.getenv("DEMO_FACULTY_PASSWORD");
             String demoStudentPassword = System.getenv("DEMO_STUDENT_PASSWORD");
 
+            if (demoAdminPassword != null && !demoAdminPassword.isBlank()) {
+                users.findByEmail("admin@campusconnect.local").ifPresent(user -> {
+                    user.setPassword(encoder.encode(demoAdminPassword));
+                    user.setActive(true);
+                    users.save(user);
+                });
+            }
+
             if (demoFacultyPassword != null && !demoFacultyPassword.isBlank()) {
                 users.findByEmail("faculty@campusconnect.local").ifPresent(user -> {
                     user.setPassword(encoder.encode(demoFacultyPassword));
