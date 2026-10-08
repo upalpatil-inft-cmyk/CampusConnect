@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface TimetableEntryRepository extends JpaRepository<TimetableEntry,Long>{
+    List<TimetableEntry> findByDepartmentCodeOrderByDayOfWeekAscStartTimeAsc(String departmentCode);
+
     List<TimetableEntry> findByDepartmentCodeAndSemesterOrderByDayOfWeekAscStartTimeAsc(
             String departmentCode, int semester);
 }
