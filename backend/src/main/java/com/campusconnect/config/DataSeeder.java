@@ -36,7 +36,21 @@ public class DataSeeder {
                 });
             }
 
-            if(users.count()>0) return;
+            if(users.count()>0) {
+                // Keep the deployed demo data complete on existing databases too.
+                // DataSeeder previously returned here, so newly added timetable subjects
+                // were never inserted after the first deployment.
+                departments.findAll().stream()
+                        .filter(d -> "CS".equalsIgnoreCase(d.getCode()))
+                        .findFirst()
+                        .ifPresent(cs -> {
+                            ensureSubject(subjects, "Data Structures", "CS303", cs, 3);
+                            ensureSubject(subjects, "Computer Organization", "CS304", cs, 3);
+                            ensureSubject(subjects, "Discrete Mathematics", "CS305", cs, 3);
+                            ensureSubject(subjects, "Object-Oriented Programming", "CS306", cs, 3);
+                        });
+                return;
+            }
 
             if (demoAdminPassword == null || demoAdminPassword.isBlank()
                     || demoFacultyPassword == null || demoFacultyPassword.isBlank()
@@ -73,4 +87,9 @@ public class DataSeeder {
             notices.save(new Notice("Welcome to CampusConnect","Tier 1 portal is now available for students and faculty.",admin));
         };
     }
+    private void ensureSubject(SubjectRepository subjects, String name, String code, Department department, int semester) {
+        boolean exists = subjects.findAll().stream().anyMatch(s -> code.equalsIgnoreCase(s.getCode()));
+        if (!exists) subjects.save(new Subject(name, code, department, semester));
+    }
+
 }
