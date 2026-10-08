@@ -37,34 +37,37 @@ function Login() {
   return <div className="login-page">
     <div className="login-art-frame">
       <img className="login-art" src="/campus-login.png" alt="CampusConnect login design for Atharva University" />
-      <section className="login-card" aria-label="CampusConnect sign in">
-        <div className="login-card-mark" aria-hidden="true">
-          <svg viewBox="0 0 64 64" role="img">
-            <path d="M11 49h42M15 45V27h34v18M10 27l22-15 22 15M21 45V34h6v11M37 45V34h6v11M25 22h14" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
-        <p className="eyebrow">CAMPUSCONNECT</p>
-        <h2>Welcome back</h2>
-        <p className="login-copy">Sign in to continue to CampusConnect</p>
+      <section className="login-live-form" aria-label="CampusConnect sign in">
         <form onSubmit={submit}>
-          <label>Email address
-            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Enter your email" autoComplete="username" required />
-          </label>
-          <label>Password
-            <span className="password-field">
-              <input type={showPassword ? 'text' : 'password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter your password" autoComplete="current-password" required />
-              <button type="button" className="password-toggle" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?'Hide password':'Show password'}>{showPassword ? 'Hide' : 'Show'}</button>
-            </span>
-          </label>
-          {error && <div className="error">{error}</div>}
-          <button className="primary wide login-submit" type="submit" disabled={busy}>
-            <span>{busy ? 'Signing in…' : 'SIGN IN'}</span><span className="login-arrow">→</span>
+          <input
+            className="login-live-email"
+            type="email"
+            value={email}
+            onChange={e=>setEmail(e.target.value)}
+            aria-label="Email address"
+            autoComplete="username"
+            required
+          />
+          <div className="login-live-password">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={e=>setPassword(e.target.value)}
+              aria-label="Password"
+              autoComplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              onClick={()=>setShowPassword(v=>!v)}
+              aria-label={showPassword?'Hide password':'Show password'}
+            />
+          </div>
+          {error && <div className="login-live-error">{error}</div>}
+          <button className="login-live-submit" type="submit" disabled={busy} aria-label="Sign in">
+            <span className="sr-only">{busy ? 'Signing in' : 'Sign in'}</span>
           </button>
         </form>
-        <div className="login-footer">
-          <span>Use your assigned student, faculty, or admin account.</span>
-          <b>Atharva University</b>
-        </div>
       </section>
     </div>
   </div>;
