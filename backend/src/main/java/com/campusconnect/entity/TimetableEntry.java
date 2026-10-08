@@ -55,6 +55,15 @@ public class TimetableEntry {
     }
 
     public Long getId(){return id;}
+    public void setSubjectName(String v){this.subjectName=v;}
+    public void setSubjectCode(String v){this.subjectCode=v;}
+    public void setFacultyName(String v){this.facultyName=v;}
+    public void setDepartmentCode(String v){this.departmentCode=v;}
+    public void setSemester(int v){this.semester=v;}
+    public void setDayOfWeek(DayOfWeek v){this.dayOfWeek=v;}
+    public void setStartTime(LocalTime v){this.startTime=v;}
+    public void setEndTime(LocalTime v){this.endTime=v;}
+    public void setRoom(String v){this.room=v;}
     public String getSubjectName(){return subjectName;}
     public String getSubjectCode(){return subjectCode;}
     public String getFacultyName(){return facultyName;}
