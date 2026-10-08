@@ -14,6 +14,7 @@ function Login() {
   const [password,setPassword] = useState('');
   const [error,setError] = useState('');
   const [busy,setBusy] = useState(false);
+  const [showPassword,setShowPassword] = useState(false);
 
   async function submit(e){
     e.preventDefault();
@@ -23,6 +24,7 @@ function Login() {
       localStorage.clear();
       const data = await login(email.trim(), password);
       localStorage.setItem('campusconnect_email', email.trim());
+      localStorage.setItem('campusconnect_name', data.name || '');
       nav('/', {replace:true});
       window.setTimeout(() => window.location.reload(), 0);
     }catch{
@@ -33,44 +35,47 @@ function Login() {
   }
 
   return <div className="login-page">
-    <div className="login-orb orb-one"/>
-    <div className="login-orb orb-two"/>
-    <section className="login-card">
-      <div className="brand-mark">C</div>
-      <p className="eyebrow">CAMPUSCONNECT</p>
-      <h1>Welcome back.</h1>
-      <p className="login-copy">Sign in to access your college portal.</p>
-      <form onSubmit={submit}>
-        <label>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={e=>setEmail(e.target.value)}
-            placeholder="you@campusconnect.local"
-            autoComplete="username"
-            required
-          />
-        </label>
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={e=>setPassword(e.target.value)}
-            placeholder="Enter your password"
-            autoComplete="current-password"
-            required
-          />
-        </label>
-        {error && <div className="error">{error}</div>}
-        <button className="primary wide" type="submit" disabled={busy}>
-          {busy ? 'Signing in…' : 'Sign in'}
-        </button>
-      </form>
-      <div className="demo-box">
-        <b>CampusConnect Portal</b>
-        Use your assigned student, faculty, or admin account.
+    <section className="login-visual" aria-label="CampusConnect introduction">
+      <div className="login-brand">
+        <div className="brand-mark">C</div>
+        <div><strong>CampusConnect</strong><span>Connect. Learn. Grow.</span></div>
+      </div>
+      <div className="login-intro">
+        <p className="login-kicker">ATHARVA UNIVERSITY · STUDENT PORTAL</p>
+        <h1>Your campus.<br/><span>Connected.</span></h1>
+        <div className="login-rule"/>
+        <p>One place for academics, people<br/>and opportunities.</p>
+      </div>
+      <div className="login-features">
+        <article className="login-feature sage"><span>01</span><div><b>Academics</b><small>Stay on top of your courses and progress.</small></div></article>
+        <article className="login-feature burgundy"><span>02</span><div><b>Community</b><small>Connect with peers and faculty.</small></div></article>
+        <article className="login-feature amber"><span>03</span><div><b>Opportunities</b><small>Discover placements, events and more.</small></div></article>
+      </div>
+      <div className="campus-photo">
+        <img src="/atharva-campus.svg" alt="Atharva University campus" />
+        <div className="campus-caption"><b>ATHARVA UNIVERSITY</b><span>Mumbai · Malad West</span></div>
+      </div>
+    </section>
+
+    <section className="login-panel">
+      <div className="login-decor burgundy-dot"/>
+      <div className="login-card">
+        <div className="login-card-mark">⌂</div>
+        <p className="eyebrow">CAMPUSCONNECT</p>
+        <h2>Welcome back</h2>
+        <p className="login-copy">Sign in to continue to CampusConnect.</p>
+        <form onSubmit={submit}>
+          <label>Email address<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Enter your email" autoComplete="username" required /></label>
+          <label>Password
+            <span className="password-field">
+              <input type={showPassword ? 'text' : 'password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter your password" autoComplete="current-password" required />
+              <button type="button" className="password-toggle" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?'Hide password':'Show password'}>{showPassword ? 'Hide' : 'Show'}</button>
+            </span>
+          </label>
+          {error && <div className="error">{error}</div>}
+          <button className="primary wide login-submit" type="submit" disabled={busy}><span>{busy ? 'Signing in…' : 'Sign in'}</span><span className="login-arrow">→</span></button>
+        </form>
+        <div className="login-footer"><span>Use your assigned student, faculty, or admin account.</span><b>Atharva University</b></div>
       </div>
     </section>
   </div>;
