@@ -36,7 +36,7 @@ function Login() {
 
   return <div className="login-page">
     <div className="login-art-frame">
-      <img className="login-art" src="/campus-login.webp" alt="CampusConnect login design for Atharva University" />
+      <img className="login-art" src="/campus-login.png" alt="CampusConnect login design for Atharva University" />
       <section className="login-card" aria-label="CampusConnect sign in">
         <div className="login-card-mark" aria-hidden="true">
           <svg viewBox="0 0 64 64" role="img">
