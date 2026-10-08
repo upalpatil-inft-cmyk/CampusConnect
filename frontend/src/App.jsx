@@ -113,6 +113,7 @@ function Shell({children}){
     ['/assignments','Assignments',FileText]
   ];
   const facultyAcademic=[
+    ['/faculty/timetable','Timetable',CalendarDays],
     ['/faculty/attendance','Attendance',ClipboardCheck],
     ['/faculty/marks','Marks',GraduationCap],
     ['/faculty/assignments','Assignments',FileText]
@@ -461,6 +462,71 @@ function FacultyMarks(){
    <button className="primary" disabled={busy}>{busy?'Saving…':'Save marks'}</button>{message&&<FormMessage type={message.type} message={message.text}/>} 
  </form></Panel></Page>
 }
+function FacultyTimetable(){
+ const[rows,setRows]=useState([]),[subjects,setSubjects]=useState([]),[semester,setSemester]=useState('5');
+ const[form,setForm]=useState({subjectId:'',semester:'5',day:'MONDAY',startTime:'09:00',endTime:'10:00',room:''});
+ const[editingId,setEditingId]=useState(null),[busy,setBusy]=useState(false),[message,setMessage]=useState(null),[loading,setLoading]=useState(true);
+
+ async function load(){
+   setLoading(true);
+   try{const r=await api.get('/faculty/timetable',{params:{semester:Number(semester)}});setRows(Array.isArray(r.data)?r.data:[])}
+   catch{setRows([])}
+   finally{setLoading(false)}
+ }
+ async function loadSubjects(){
+   try{const r=await api.get('/faculty/subjects');setSubjects(Array.isArray(r.data)?r.data:[])}
+   catch{setSubjects([])}
+ }
+ useEffect(()=>{loadSubjects()},[]);
+ useEffect(()=>{load()},[semester]);
+
+ function resetForm(){
+   setEditingId(null);
+   setForm({subjectId:'',semester,day:'MONDAY',startTime:'09:00',endTime:'10:00',room:''});
+ }
+ function edit(row){
+   const subject=subjects.find(x=>x.code===row.code);
+   setEditingId(row.id);
+   setForm({subjectId:subject?.id||'',semester:String(row.semester),day:row.day,startTime:row.startTime.slice(0,5),endTime:row.endTime.slice(0,5),room:row.room||''});
+   window.scrollTo({top:0,behavior:'smooth'});
+ }
+ async function save(e){
+   e.preventDefault();setMessage(null);setBusy(true);
+   try{
+     const payload={...form,subjectId:Number(form.subjectId),semester:Number(form.semester)};
+     if(editingId) await api.put('/faculty/timetable/'+editingId,payload);
+     else await api.post('/faculty/timetable',payload);
+     setMessage({type:'success',text:editingId?'Timetable entry updated successfully.':'Timetable entry published successfully.'});
+     setSemester(String(form.semester));resetForm();await load();
+   }catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to save timetable entry.'})}
+   finally{setBusy(false)}
+ }
+ async function remove(id){
+   if(!window.confirm('Delete this timetable entry?')) return;
+   setBusy(id);setMessage(null);
+   try{await api.delete('/faculty/timetable/'+id);setMessage({type:'success',text:'Timetable entry deleted.'});await load()}
+   catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to delete timetable entry.'})}
+   finally{setBusy(false)}
+ }
+ return <Page title="Timetable" subtitle="Publish and maintain the weekly schedule for your department.">
+   <Panel title={editingId?'Update timetable entry':'Publish timetable entry'} meta="Only subjects from your department can be scheduled.">
+    <form className="form-grid" onSubmit={save}>
+      <label>Semester<select required value={form.semester} onChange={e=>setForm({...form,semester:e.target.value})}>{[1,2,3,4,5,6,7,8].map(n=><option key={n} value={n}>Semester {n}</option>)}</select></label>
+      <label>Subject<select required value={form.subjectId} onChange={e=>setForm({...form,subjectId:e.target.value})}><option value="">Choose subject</option>{subjects.filter(s=>s.semester===Number(form.semester)).map(s=><option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select></label>
+      <label>Day<select required value={form.day} onChange={e=>setForm({...form,day:e.target.value})}>{['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'].map(d=><option key={d}>{d}</option>)}</select></label>
+      <label>Room<input required value={form.room} onChange={e=>setForm({...form,room:e.target.value})} placeholder="Room 204"/></label>
+      <label>Start time<input required type="time" value={form.startTime} onChange={e=>setForm({...form,startTime:e.target.value})}/></label>
+      <label>End time<input required type="time" value={form.endTime} onChange={e=>setForm({...form,endTime:e.target.value})}/></label>
+      <div className="form-actions"><button className="primary" disabled={busy||!subjects.length}>{busy?'Saving…':editingId?'Update entry':'Publish entry'}</button>{editingId&&<button type="button" className="secondary-btn" onClick={resetForm}>Cancel</button>}</div>
+      {message&&<FormMessage type={message.type} message={message.text}/>}
+    </form>
+   </Panel>
+   <Panel title="Published schedule" meta="Select a semester to review or update its entries.">
+     <div className="timetable-admin-head"><select value={semester} onChange={e=>setSemester(e.target.value)}>{[1,2,3,4,5,6,7,8].map(n=><option key={n} value={n}>Semester {n}</option>)}</select></div>
+     {loading?<div className="loading">Loading timetable…</div>:!rows.length?<EmptyState icon={CalendarDays} title="No entries for this semester" message="Publish the first class using the form above."/>:<div className="table-wrap"><table><thead><tr><th>Day</th><th>Time</th><th>Subject</th><th>Faculty</th><th>Room</th><th>Actions</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}><td>{r.day}</td><td>{r.startTime.slice(0,5)} – {r.endTime.slice(0,5)}</td><td><b>{r.code}</b><br/><small>{r.subject}</small></td><td>{r.faculty}</td><td>{r.room}</td><td><div className="table-actions"><button className="secondary-btn" onClick={()=>edit(r)}>Edit</button><button className="danger-btn" disabled={busy===r.id} onClick={()=>remove(r.id)}>Delete</button></div></td></tr>)}</tbody></table></div>}
+   </Panel>
+ </Page>
+}
 function FacultyAssignments(){
  const[subjects,setSubjects]=useState([]),[rows,setRows]=useState([]),[form,setForm]=useState({title:'',description:'',subjectId:'',deadline:''}),[busy,setBusy]=useState(false),[loadingSubjects,setLoadingSubjects]=useState(true),[subjectsError,setSubjectsError]=useState(false),[message,setMessage]=useState(null);
  async function loadAssignments(){try{const r=await api.get('/faculty/assignments/mine');setRows(Array.isArray(r.data)?r.data:[])}catch{setRows([])}}
@@ -594,6 +660,7 @@ export default function App(){
 
     {r === 'FACULTY' && <>
       <Route path="/" element={protectedPage(<FacultyDashboard/>)}/>
+      <Route path="/faculty/timetable" element={protectedPage(<FacultyTimetable/>)}/>
       <Route path="/faculty/attendance" element={protectedPage(<FacultyAttendance/>)}/>
       <Route path="/faculty/marks" element={protectedPage(<FacultyMarks/>)}/>
       <Route path="/faculty/assignments" element={protectedPage(<FacultyAssignments/>)}/><Route path="/faculty/submissions" element={protectedPage(<FacultySubmissions/>)}/>
