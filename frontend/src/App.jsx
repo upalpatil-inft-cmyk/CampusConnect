@@ -35,37 +35,21 @@ function Login() {
   }
 
   return <div className="login-page">
-    <section className="login-visual" aria-label="CampusConnect introduction">
-      <div className="login-brand">
-        <div className="brand-mark">C</div>
-        <div><strong>CampusConnect</strong><span>Connect. Learn. Grow.</span></div>
-      </div>
-      <div className="login-intro">
-        <p className="login-kicker">ATHARVA UNIVERSITY · STUDENT PORTAL</p>
-        <h1>Your campus.<br/><span>Connected.</span></h1>
-        <div className="login-rule"/>
-        <p>One place for academics, people<br/>and opportunities.</p>
-      </div>
-      <div className="login-features">
-        <article className="login-feature sage"><span>01</span><div><b>Academics</b><small>Stay on top of your courses and progress.</small></div></article>
-        <article className="login-feature burgundy"><span>02</span><div><b>Community</b><small>Connect with peers and faculty.</small></div></article>
-        <article className="login-feature amber"><span>03</span><div><b>Opportunities</b><small>Discover placements, events and more.</small></div></article>
-      </div>
-      <div className="campus-photo">
-        <img src="/atharva-campus.svg" alt="Atharva University campus" />
-        <div className="campus-caption"><b>ATHARVA UNIVERSITY</b><span>Mumbai · Malad West</span></div>
-      </div>
-    </section>
-
-    <section className="login-panel">
-      <div className="login-decor burgundy-dot"/>
-      <div className="login-card">
-        <div className="login-card-mark">⌂</div>
+    <div className="login-art-frame">
+      <img className="login-art" src="/campus-login.webp" alt="CampusConnect login design for Atharva University" />
+      <section className="login-card" aria-label="CampusConnect sign in">
+        <div className="login-card-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img">
+            <path d="M11 49h42M15 45V27h34v18M10 27l22-15 22 15M21 45V34h6v11M37 45V34h6v11M25 22h14" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
         <p className="eyebrow">CAMPUSCONNECT</p>
         <h2>Welcome back</h2>
-        <p className="login-copy">Sign in to continue to CampusConnect.</p>
+        <p className="login-copy">Sign in to continue to CampusConnect</p>
         <form onSubmit={submit}>
-          <label>Email address<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Enter your email" autoComplete="username" required /></label>
+          <label>Email address
+            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Enter your email" autoComplete="username" required />
+          </label>
           <label>Password
             <span className="password-field">
               <input type={showPassword ? 'text' : 'password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Enter your password" autoComplete="current-password" required />
@@ -73,11 +57,16 @@ function Login() {
             </span>
           </label>
           {error && <div className="error">{error}</div>}
-          <button className="primary wide login-submit" type="submit" disabled={busy}><span>{busy ? 'Signing in…' : 'Sign in'}</span><span className="login-arrow">→</span></button>
+          <button className="primary wide login-submit" type="submit" disabled={busy}>
+            <span>{busy ? 'Signing in…' : 'SIGN IN'}</span><span className="login-arrow">→</span>
+          </button>
         </form>
-        <div className="login-footer"><span>Use your assigned student, faculty, or admin account.</span><b>Atharva University</b></div>
-      </div>
-    </section>
+        <div className="login-footer">
+          <span>Use your assigned student, faculty, or admin account.</span>
+          <b>Atharva University</b>
+        </div>
+      </section>
+    </div>
   </div>;
 }
 
