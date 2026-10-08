@@ -465,7 +465,7 @@ function FacultyMarks(){
 function FacultyTimetable(){
  const[rows,setRows]=useState([]),[subjects,setSubjects]=useState([]),[semester,setSemester]=useState('5');
  const[form,setForm]=useState({subjectId:'',semester:'5',day:'MONDAY',startTime:'09:00',endTime:'10:00',room:''});
- const[editingId,setEditingId]=useState(null),[busy,setBusy]=useState(false),[message,setMessage]=useState(null),[loading,setLoading]=useState(true);
+ const[editingId,setEditingId]=useState(null),[deleteId,setDeleteId]=useState(null),[busy,setBusy]=useState(false),[message,setMessage]=useState(null),[loading,setLoading]=useState(true);
 
  async function load(){
    setLoading(true);
@@ -502,7 +502,6 @@ function FacultyTimetable(){
    finally{setBusy(false)}
  }
  async function remove(id){
-   if(!window.confirm('Delete this timetable entry?')) return;
    setBusy(id);setMessage(null);
    try{await api.delete('/faculty/timetable/'+id);setMessage({type:'success',text:'Timetable entry deleted.'});await load()}
    catch(e){setMessage({type:'error',text:e.response?.data?.message||'Unable to delete timetable entry.'})}
@@ -523,7 +522,7 @@ function FacultyTimetable(){
    </Panel>
    <Panel title="Published schedule" meta="Select a semester to review or update its entries.">
      <div className="timetable-admin-head"><select value={semester} onChange={e=>setSemester(e.target.value)}>{[1,2,3,4,5,6,7,8].map(n=><option key={n} value={n}>Semester {n}</option>)}</select></div>
-     {loading?<div className="loading">Loading timetable…</div>:!rows.length?<EmptyState icon={CalendarDays} title="No entries for this semester" message="Publish the first class using the form above."/>:<div className="table-wrap"><table><thead><tr><th>Day</th><th>Time</th><th>Subject</th><th>Faculty</th><th>Room</th><th>Actions</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}><td>{r.day}</td><td>{r.startTime.slice(0,5)} – {r.endTime.slice(0,5)}</td><td><b>{r.code}</b><br/><small>{r.subject}</small></td><td>{r.faculty}</td><td>{r.room}</td><td><div className="table-actions"><button className="secondary-btn" onClick={()=>edit(r)}>Edit</button><button className="danger-btn" disabled={busy===r.id} onClick={()=>remove(r.id)}>Delete</button></div></td></tr>)}</tbody></table></div>}
+     {loading?<div className="loading">Loading timetable…</div>:!rows.length?<EmptyState icon={CalendarDays} title="No entries for this semester" message="Publish the first class using the form above."/>:<div className="table-wrap"><table><thead><tr><th>Day</th><th>Time</th><th>Subject</th><th>Faculty</th><th>Room</th><th>Actions</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}><td>{r.day}</td><td>{r.startTime.slice(0,5)} – {r.endTime.slice(0,5)}</td><td><b>{r.code}</b><br/><small>{r.subject}</small></td><td>{r.faculty}</td><td>{r.room}</td><td><div className="table-actions"><button className="secondary-btn" onClick={()=>edit(r)}>Edit</button>{deleteId===r.id?<><button className="danger-btn" disabled={busy===r.id} onClick={()=>remove(r.id)}>{busy===r.id?'Deleting…':'Confirm'}</button><button className="secondary-btn" onClick={()=>setDeleteId(null)}>Cancel</button></>:<button className="danger-btn" onClick={()=>setDeleteId(r.id)}>Delete</button>}</div></td></tr>)}</tbody></table></div>}
    </Panel>
  </Page>
 }
