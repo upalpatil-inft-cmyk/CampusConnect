@@ -36,14 +36,6 @@ public class DataSeeder {
                 });
             }
 
-            if (demoStudentPassword != null && !demoStudentPassword.isBlank()) {
-                users.findByEmail("student@campusconnect.local").ifPresent(user -> {
-                    user.setPassword(encoder.encode(demoStudentPassword));
-                    user.setActive(true);
-                    users.save(user);
-                });
-            }
-
             if(users.count()>0) {
                 // Keep the deployed demo data complete on existing databases too.
                 // DataSeeder previously returned here, so newly added timetable subjects
