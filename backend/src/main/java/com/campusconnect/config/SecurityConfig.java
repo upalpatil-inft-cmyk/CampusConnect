@@ -2,6 +2,7 @@ package com.campusconnect.config;
 
 import com.campusconnect.security.JwtAuthFilter;
 import org.springframework.context.annotation.*;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -10,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.*;
 import org.springframework.web.cors.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -18,33 +20,47 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtFilter;
     private final List<String> allowedOriginPatterns;
 
-    public SecurityConfig(JwtAuthFilter jwtFilter,
-                          @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origin-patterns:http://localhost:5173,https://*.vercel.app}") List<String> allowedOriginPatterns){
-        this.jwtFilter=jwtFilter;
-        this.allowedOriginPatterns=allowedOriginPatterns;
+    public SecurityConfig(
+            JwtAuthFilter jwtFilter,
+            @org.springframework.beans.factory.annotation.Value(
+                "${app.cors.allowed-origin-patterns:http://localhost:5173,https://*.vercel.app}"
+            ) List<String> configuredOriginPatterns) {
+        this.jwtFilter = jwtFilter;
+        // Keep the configured patterns, and explicitly allow the current production
+        // frontend domain so an environment-variable mismatch cannot block login.
+        this.allowedOriginPatterns = new ArrayList<>(configuredOriginPatterns);
+        if (!this.allowedOriginPatterns.contains("https://campus-connect-umber-eight.vercel.app")) {
+            this.allowedOriginPatterns.add("https://campus-connect-umber-eight.vercel.app");
+        }
     }
 
-    @Bean PasswordEncoder passwordEncoder(){return new BCryptPasswordEncoder();}
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-    @Bean SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf->csrf.disable())
-            .cors(cors->cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(a->a
-                .requestMatchers("/api/auth/**","/swagger-ui/**","/swagger-ui.html","/v3/api-docs/**").permitAll()
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(a -> a
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated())
             .addFilterBefore(jwtFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
-    @Bean CorsConfigurationSource corsConfigurationSource(){
-        CorsConfiguration c=new CorsConfiguration();
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration c = new CorsConfiguration();
         c.setAllowedOriginPatterns(allowedOriginPatterns);
-        c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        c.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         c.setAllowedHeaders(List.of("*"));
         c.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource s=new UrlBasedCorsConfigurationSource();
-        s.registerCorsConfiguration("/**",c);
+        UrlBasedCorsConfigurationSource s = new UrlBasedCorsConfigurationSource();
+        s.registerCorsConfiguration("/**", c);
         return s;
     }
 }
