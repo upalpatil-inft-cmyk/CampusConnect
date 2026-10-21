@@ -12,7 +12,7 @@ public class Submission {
     @ManyToOne(optional=false) @JoinColumn(name="student_id", foreignKey=@ForeignKey(name="fk_submission_student")) private Student student;
     @Column(nullable=false) private String fileName;
     @Column(nullable=false) private LocalDateTime submittedAt = LocalDateTime.now();
-    @Lob @Basic(fetch=FetchType.LAZY) private byte[] fileData;
+    @Basic(fetch=FetchType.LAZY) @Column(columnDefinition="bytea") private byte[] fileData;
     private String contentType;
     private Double marks;
     @Column(length=2000) private String feedback;
